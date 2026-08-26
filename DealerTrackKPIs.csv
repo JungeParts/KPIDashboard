@@ -1,0 +1,2 @@
+DemandFillRate,FirstFillRate,LostSales,BackorderLines,InventoryOnHand,Obsolescence,AnnualizedTurns,ExcessInventory,PartsSalesToday,GrossProfitToday,OverrideLines,OverrideGPImpact,UnrealizedSales,UnrealizedGP,AvgGPPerRO,CounterSalesToday
+95.6,93.1,2910,19,631000,6.2,4.8,17.1,13820,5470,31,205,2910,1140,101.20,4210
