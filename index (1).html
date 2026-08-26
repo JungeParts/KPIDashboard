@@ -1,0 +1,960 @@
+<!doctype html>
+
+<html lang="en">
+   <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
+      <title>Dealertrack Parts Dashboard</title>
+      <style>
+         :root {
+            --n: #102a43;
+            --b: #1677c8;
+            --g: #16834b;
+            --a: #b56a00;
+            --r: #bc3434;
+            --s: #52616b;
+            --bg: #f3f6f9;
+            --l: #dce4ea;
+         }
+         * {
+            box-sizing: border-box;
+         }
+         body {
+            margin: 0;
+            background: var(--bg);
+            color: #172b3a;
+            font:
+               14px Segoe UI,
+               Arial,
+               sans-serif;
+         }
+         .shell {
+            max-width: 1500px;
+            margin: auto;
+         }
+         .top {
+            background: linear-gradient(120deg, var(--n), #1a5b91);
+            color: #fff;
+            padding: 26px 32px;
+         }
+         .toprow {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: center;
+         }
+         .top h1 {
+            margin: 0 0 6px;
+            font-size: 28px;
+         }
+         .top p {
+            margin: 0;
+            color: #d5e8f7;
+         }
+         .stamp {
+            background: #ffffff1d;
+            border: 1px solid #ffffff36;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+         }
+         .filters {
+            background: #fff;
+            padding: 14px 32px;
+            border-bottom: 1px solid var(--l);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+         }
+         .filters label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--s);
+         }
+         select,
+         button,
+         input {
+            padding: 8px;
+            border: 1px solid var(--l);
+            border-radius: 6px;
+            background: #fff;
+         }
+         button {
+            background: var(--b);
+            border-color: var(--b);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+         }
+         .section {
+            padding: 24px 32px 0;
+         }
+         .section h2 {
+            color: var(--n);
+            font-size: 18px;
+            margin: 0 0 8px;
+         }
+         .note,
+         .sub,
+         .muted {
+            color: var(--s);
+            font-size: 12px;
+         }
+         .grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(200px, 1fr));
+            gap: 14px;
+         }
+         .card,
+         .panel {
+            background: #fff;
+            border: 1px solid var(--l);
+            border-radius: 10px;
+            padding: 17px;
+            box-shadow: 0 2px 8px #17324d0a;
+         }
+         .label {
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--s);
+            font-weight: 700;
+            font-size: 11px;
+         }
+         .value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--n);
+            margin: 9px 0 5px;
+         }
+         .detail {
+            font-size: 12px;
+            color: var(--s);
+         }
+         .good {
+            color: var(--g);
+         }
+         .warn {
+            color: var(--a);
+         }
+         .bad {
+            color: var(--r);
+         }
+         .twocol {
+            display: grid;
+            grid-template-columns: 1.25fr 0.75fr;
+            gap: 14px;
+            padding-bottom: 24px;
+         }
+         .panel h3 {
+            color: var(--n);
+            font-size: 15px;
+            margin: 0 0 4px;
+         }
+         .bars {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+         }
+         .barrow {
+            display: grid;
+            grid-template-columns: 130px 1fr 65px;
+            gap: 10px;
+            align-items: center;
+            font-size: 12px;
+         }
+         .track {
+            height: 12px;
+            background: #e8eef2;
+            border-radius: 99px;
+            overflow: hidden;
+         }
+         .fill {
+            height: 100%;
+            background: var(--b);
+            border-radius: 99px;
+         }
+         .fill.g {
+            background: var(--g);
+         }
+         .fill.a {
+            background: var(--a);
+         }
+         .fill.r {
+            background: var(--r);
+         }
+         .metrics {
+            display: grid;
+            gap: 8px;
+         }
+         .metric {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #edf1f4;
+            padding: 9px 0;
+         }
+         .metric:last-child {
+            border: 0;
+         }
+         table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            font-size: 12px;
+         }
+         th {
+            background: #eaf2f8;
+            color: var(--n);
+            text-align: left;
+            padding: 10px;
+            text-transform: uppercase;
+            font-size: 10px;
+         }
+         td {
+            padding: 10px;
+            border-top: 1px solid #edf1f4;
+         }
+         td.num {
+            text-align: right;
+         }
+         .badge {
+            border-radius: 99px;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            background: #fff2dc;
+         }
+         .badge.good {
+            background: #e5f5eb;
+         }
+         .badge.bad {
+            background: #fbe7e7;
+         }
+         .footer {
+            padding: 24px 32px;
+            color: var(--s);
+            font-size: 12px;
+         }
+         @media (max-width: 980px) {
+            .grid {
+               grid-template-columns: repeat(2, 1fr);
+            }
+            .twocol {
+               grid-template-columns: 1fr;
+            }
+            .toprow {
+               flex-direction: column;
+               align-items: flex-start;
+            }
+         }
+         @media (max-width: 560px) {
+            .section,
+            .top,
+            .filters,
+            .footer {
+               padding-left: 16px;
+               padding-right: 16px;
+            }
+            .grid {
+               grid-template-columns: 1fr;
+            }
+            .barrow {
+               grid-template-columns: 100px 1fr 50px;
+            }
+         }
+      </style>
+   </head>
+   <body>
+      <div class="shell">
+         <header class="top">
+            <div class="toprow">
+               <div>
+                  <h1>DealerTrack Parts Daily Dashboard</h1>
+                  <p>
+                     Demand Fill • Inventory Aging • Sales &amp; GP • Price
+                     Overrides • Unrealized Sales • Aged ROs &amp; PRI Parts
+                  </p>
+               </div>
+               <div class="stamp">
+                  Reporting date: <strong id="date">Today</strong><br />Updated:
+                  <span id="updated"></span>
+               </div>
+            </div>
+         </header>
+         <div class="filters">
+            <label
+               >Location
+               <select>
+                  <option>Main Store</option>
+                  <option>All Locations</option>
+               </select></label
+            ><label
+               >Department
+               <select>
+                  <option>All Parts</option>
+                  <option>Service Parts</option>
+                  <option>Wholesale</option>
+                  <option>Retail Counter</option>
+               </select></label
+            ><button onclick="loadKpiCsv()">
+   Refresh KPI Data
+</button>
+         </div>
+         <section class="section">
+            <h2>Demand Fill Analysis</h2>
+            <p class="note">DealerTrack daily demand fill report.</p>
+            <div class="grid">
+               <div class="card">
+                  <div class="label">Demand Fill Rate</div>
+                  <div class="value" id="DemandFillRate">94.2%</div>
+                  <div class="detail warn">Target: 95.0%</div>
+               </div>
+               <div class="card">
+                  <div class="label">First-Fill Rate</div>
+                  <div class="value" id="FirstFillRate">91.8%</div>
+                  <div class="detail warn">Review A-mover stockouts</div>
+               </div>
+               <div class="card">
+                  <div class="label">Lost Sales</div>
+                  <div class="value" id="LostSales">$3,840</div>
+                  <div class="detail bad">Top 10 SKUs = $1,920</div>
+               </div>
+               <div class="card">
+                  <div class="label">Backorder Lines</div>
+                  <div class="value" id="BackorderLines">27</div>
+                  <div class="detail warn">12 service-critical</div>
+               </div>
+            </div>
+         </section>
+         <section class="section">
+            <h2>Inventory Aging</h2>
+            <p class="note">DealerTrack stock status / aging report.</p>
+            <div class="grid">
+               <div class="card">
+                  <div class="label">Inventory On-Hand</div>
+                  <div class="value" id="InventoryOnHand">$624,000</div>
+                  <div class="detail">▲ $4,200 vs. yesterday</div>
+               </div>
+               <div class="card">
+                  <div class="label">Obsolescence</div>
+                  <div class="value" id="Obsolescence">6.7%</div>
+                  <div class="detail good">$41,800 aged inventory</div>
+               </div>
+               <div class="card">
+                  <div class="label">Annualized Turns</div>
+                  <div class="value" id="AnnualizedTurns">4.6x</div>
+                  <div class="detail good">Target: 4.5x</div>
+               </div>
+               <div class="card">
+                  <div class="label">Excess / Slow-Moving</div>
+                  <div class="value" id="ExcessInventory">18.4%</div>
+                  <div class="detail warn">13–24 and 25+ months</div>
+               </div>
+            </div>
+         </section>
+         <section class="section">
+            <div class="twocol">
+               <div class="panel">
+                  <h3>Inventory aging by value</h3>
+                  <p class="sub">
+                     Use DealerTrack aging buckets to target returns or
+                     liquidation.
+                  </p>
+                  <div class="bars">
+                     <div class="barrow">
+                        <span>0–6 months</span>
+                        <div class="track">
+                           <div class="fill g" style="width: 72%"></div>
+                        </div>
+                        <strong>$449K</strong>
+                     </div>
+                     <div class="barrow">
+                        <span>7–12 months</span>
+                        <div class="track">
+                           <div class="fill" style="width: 15%"></div>
+                        </div>
+                        <strong>$94K</strong>
+                     </div>
+                     <div class="barrow">
+                        <span>13–24 months</span>
+                        <div class="track">
+                           <div class="fill a" style="width: 8%"></div>
+                        </div>
+                        <strong>$50K</strong>
+                     </div>
+                     <div class="barrow">
+                        <span>25+ months</span>
+                        <div class="track">
+                           <div class="fill r" style="width: 5%"></div>
+                        </div>
+                        <strong>$31K</strong>
+                     </div>
+                  </div>
+               </div>
+               <div class="panel">
+                  <h3>Daily exceptions</h3>
+                  <p class="sub">Manager action queue.</p>
+                  <div class="metrics">
+                     <div class="metric">
+                        <span>Emergency purchases</span
+                        ><strong class="warn">9</strong>
+                     </div>
+                     <div class="metric">
+                        <span>Backordered service parts</span
+                        ><strong class="bad">14</strong>
+                     </div>
+                     <div class="metric">
+                        <span>Unreceived POs</span
+                        ><strong class="warn">6</strong>
+                     </div>
+                     <div class="metric">
+                        <span>Open special orders</span><strong>17</strong>
+                     </div>
+                     <div class="metric">
+                        <span>Negative on-hand</span
+                        ><strong class="bad">3</strong>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </section>
+         <section class="section">
+            <h2>Sales Analysis, Overrides &amp; Unrealized Sales</h2>
+            <p class="note">
+               DealerTrack daily sales analysis, price override audit, and
+               unrealized sales report.
+            </p>
+            <div class="grid">
+               <div class="card">
+                  <div class="label">Parts Sales Today</div>
+                  <div class="value" id="PartsSalesToday">$12,480</div>
+                  <div class="detail good">39.5% GP</div>
+               </div>
+               <div class="card">
+                  <div class="label">Gross Profit Today</div>
+                  <div class="value" id="GrossProfitToday">$4,930</div>
+                  <div class="detail good">Target GP: 38.0%</div>
+               </div>
+               <div class="card">
+                  <div class="label">Override Lines</div>
+                  <div class="value" id="OverrideLines">42</div>
+                  <div class="detail warn">12.3% of sold lines</div>
+               </div>
+               <div class="card">
+                  <div class="label">Override GP Impact</div>
+                  <div class="value" id="OverrideGPImpact">$286</div>
+                  <div class="detail bad">Lost gross vs. standard</div>
+               </div>
+               <div class="card">
+                  <div class="label">Unrealized Sales</div>
+                  <div class="value" id="UnrealizedSales">$3,840</div>
+                  <div class="detail bad">Missed revenue from stockouts</div>
+               </div>
+               <div class="card">
+                  <div class="label">Unrealized GP</div>
+                  <div class="value" id="UnrealizedGP">$1,520</div>
+                  <div class="detail bad">Estimated missed gross</div>
+               </div>
+               <div class="card">
+                  <div class="label">Avg GP per RO</div>
+                  <div class="value" id="AvgGPPerRO">$96.88</div>
+                  <div class="detail warn">$4.12 below target</div>
+               </div>
+               <div class="card">
+                  <div class="label">Counter Sales Today</div>
+                  <div class="value" id="CounterSalesToday">$3,940</div>
+                  <div class="detail good">▲ $310 vs. prior month</div>
+               </div>
+            </div>
+         </section>
+         <section class="section">
+            <h2>Aged Service ROs &amp; PRI Parts CSV Feed</h2>
+            <p class="note">
+               Upload a DealerTrack daily CSV. Processing occurs locally in this
+               browser; no data leaves your machine.
+            </p>
+            <div class="twocol">
+               <div class="panel">
+                  <h3>1. Choose CSV file</h3>
+                  <p class="sub">
+                     Flexible headers supported: RO, Open Date, Age Days,
+                     Status, PRI, Part Number, Description, Qty, Sale.
+                  </p>
+                  <input
+                     id="csvFile"
+                     type="file"
+                     accept=".csv,text/csv"
+                     style="margin-top: 10px; display: block; max-width: 100%"
+                  />
+               </div>
+               <div class="panel">
+                  <h3>2. Click Upload to load data</h3>
+                  <p class="sub">
+                     This forces the browser to read and process the selected
+                     file.
+                  </p>
+                  <button id="uploadBtn" style="margin-top: 10px">
+                     Upload CSV
+                  </button>
+                  <div class="metrics" style="margin-top: 14px">
+                     <div class="metric">
+                        <span>CSV rows loaded</span><strong id="rows">0</strong>
+                     </div>
+                     <div class="metric">
+                        <span>Aged open ROs (3+ days)</span
+                        ><strong class="warn" id="aged">—</strong>
+                     </div>
+                     <div class="metric">
+                        <span>PRI part lines</span
+                        ><strong class="warn" id="pri">—</strong>
+                     </div>
+                     <div class="metric">
+                        <span>PRI estimated sale value</span
+                        ><strong class="bad" id="priValue">—</strong>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <div class="panel">
+               <h3>Open RO aging</h3>
+               <p class="sub">
+                  Uses Age Days or calculates age from Open Date.
+               </p>
+               <div class="bars">
+                  <div class="barrow">
+                     <span>0–2 days</span>
+                     <div class="track">
+                        <div class="fill g" id="b02" style="width: 0%"></div>
+                     </div>
+                     <strong id="a02">—</strong>
+                  </div>
+                  <div class="barrow">
+                     <span>3–5 days</span>
+                     <div class="track">
+                        <div class="fill a" id="b35" style="width: 0%"></div>
+                     </div>
+                     <strong id="a35">—</strong>
+                  </div>
+                  <div class="barrow">
+                     <span>6–10 days</span>
+                     <div class="track">
+                        <div class="fill a" id="b610" style="width: 0%"></div>
+                     </div>
+                     <strong id="a610">—</strong>
+                  </div>
+                  <div class="barrow">
+                     <span>11+ days</span>
+                     <div class="track">
+                        <div class="fill r" id="b11" style="width: 0%"></div>
+                     </div>
+                     <strong id="a11">—</strong>
+                  </div>
+               </div>
+            </div>
+            <div class="panel">
+               <h3>Priority follow-up queue</h3>
+               <p class="sub">
+                  Aged PRI lines sorted oldest first, then by estimated sale
+                  value.
+               </p>
+               <div style="overflow-x: auto">
+                  <table>
+                     <thead>
+                        <tr>
+                           <th>RO</th>
+                           <th>Age</th>
+                           <th>Status</th>
+                           <th>Part / Description</th>
+                           <th>Qty</th>
+                           <th>Sale</th>
+                        </tr>
+                     </thead>
+                     <tbody id="queue">
+                        <tr>
+                           <td colspan="6" class="muted">
+                              Upload a CSV to populate this table.
+                           </td>
+                        </tr>
+                     </tbody>
+                  </table>
+               </div>
+            </div>
+         </section>
+         <section class="section">
+            <h2>Daily Scorecard</h2>
+            <table>
+               <thead>
+                  <tr>
+                     <th>Metric</th>
+                     <th>Current</th>
+                     <th>Target</th>
+                     <th>Status</th>
+                  </tr>
+               </thead>
+               <tbody>
+                  <tr>
+                     <td>Demand fill rate</td>
+                     <td class="num">94.2%</td>
+                     <td class="num">95.0%</td>
+                     <td><span class="badge">Watch</span></td>
+                  </tr>
+                  <tr>
+                     <td>Parts gross profit</td>
+                     <td class="num">39.5%</td>
+                     <td class="num">38.0%</td>
+                     <td><span class="badge good">Above target</span></td>
+                  </tr>
+                  <tr>
+                     <td>Obsolescence</td>
+                     <td class="num">6.7%</td>
+                     <td class="num">7.0%</td>
+                     <td><span class="badge good">On target</span></td>
+                  </tr>
+                  <tr>
+                     <td>Price override rate</td>
+                     <td class="num">12.3%</td>
+                     <td class="num">10.0%</td>
+                     <td><span class="badge bad">Needs action</span></td>
+                  </tr>
+                  <tr>
+                     <td>Unrealized sales</td>
+                     <td class="num">$3,840</td>
+                     <td class="num">&lt;$3,000</td>
+                     <td><span class="badge">Watch</span></td>
+                  </tr>
+               </tbody>
+            </table>
+         </section>
+         <footer class="footer">
+            Illustrative KPI values. Replace with your DealerTrack CSV exports.
+            Suggested headers: RO, Open Date, Age Days, Status, PRI, Part
+            Number, Description, Qty, Sale.
+         </footer>
+      </div>
+      <script>
+
+         // ==========================================
+         // CONFIG
+         // ==========================================
+         // Pulls from the GitHub relay that Power Automate pushes the
+         // OneDrive/SharePoint CSV to (raw.githubusercontent.com allows
+         // cross-origin fetch, which SharePoint/OneDrive does not).
+         const CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/DealerTrackKPIs.csv";
+
+         // How often to automatically re-pull the CSV, in milliseconds.
+         // 300000 = 5 minutes. Set to 0 to disable auto-refresh (manual button only).
+         const REFRESH_INTERVAL_MS = 300000;
+
+         // ==========================================
+         // KPI MAPPING
+         // ==========================================
+
+         function setValue(id, value) {
+            const element = document.getElementById(id);
+
+            if (element) {
+               element.textContent = value;
+            }
+         }
+
+         function currency(value) {
+            return Number(value || 0).toLocaleString("en-US", {
+               style: "currency",
+               currency: "USD",
+            });
+         }
+
+         /**
+          * Updates the "Reporting date" and "Updated" stamp in the header.
+          * status: "" (normal), "loading", or "error" — used to give a
+          * quick visual cue when the last refresh attempt failed.
+          */
+         function stamp(status) {
+            const now = new Date();
+
+            setValue(
+               "date",
+               now.toLocaleDateString("en-US", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+               }),
+            );
+
+            const timeText = now.toLocaleTimeString("en-US", {
+               hour: "numeric",
+               minute: "2-digit",
+            });
+
+            const updatedEl = document.getElementById("updated");
+            if (updatedEl) {
+               if (status === "error") {
+                  updatedEl.textContent = `Refresh failed at ${timeText} — showing last known data`;
+                  updatedEl.style.color = "#ffb4b4";
+               } else {
+                  updatedEl.textContent = timeText;
+                  updatedEl.style.color = "";
+               }
+            }
+         }
+
+ function mapCsvKpiData(kpi) {
+
+   setValue(
+      "DemandFillRate",
+      `${kpi.DemandFillRate}%`
+   );
+
+   setValue(
+      "FirstFillRate",
+      `${kpi.FirstFillRate}%`
+   );
+
+   setValue(
+      "LostSales",
+      currency(kpi.LostSales)
+   );
+
+   setValue(
+      "BackorderLines",
+      kpi.BackorderLines
+   );
+
+   setValue(
+      "InventoryOnHand",
+      currency(kpi.InventoryOnHand)
+   );
+
+   setValue(
+      "Obsolescence",
+      `${kpi.Obsolescence}%`
+   );
+
+   setValue(
+      "AnnualizedTurns",
+      `${kpi.AnnualizedTurns}x`
+   );
+
+   setValue(
+      "ExcessInventory",
+      `${kpi.ExcessInventory}%`
+   );
+
+   setValue(
+      "PartsSalesToday",
+      currency(kpi.PartsSalesToday)
+   );
+
+   setValue(
+      "GrossProfitToday",
+      currency(kpi.GrossProfitToday)
+   );
+
+   setValue(
+      "OverrideLines",
+      kpi.OverrideLines
+   );
+
+   setValue(
+      "OverrideGPImpact",
+      currency(kpi.OverrideGPImpact)
+   );
+
+   setValue(
+      "UnrealizedSales",
+      currency(kpi.UnrealizedSales)
+   );
+
+   setValue(
+      "UnrealizedGP",
+      currency(kpi.UnrealizedGP)
+   );
+
+   setValue(
+      "AvgGPPerRO",
+      currency(kpi.AvgGPPerRO)
+   );
+
+   setValue(
+      "CounterSalesToday",
+      currency(kpi.CounterSalesToday)
+   );
+
+}
+
+         // ==========================================
+         // SOURCE SWITCHER
+         // ==========================================
+
+         function normalizeText(value) {
+            return String(value || "")
+               .toLowerCase()
+               .replace(/[^a-z0-9]/g, "");
+         }
+         /**
+          * Returns the first matching field value
+          * using flexible header matching.
+          */
+         function getFieldValue(record, fieldNames) {
+            const matchingKey = Object.keys(record).find((recordKey) =>
+               fieldNames.some(
+                  (fieldName) =>
+                     normalizeText(recordKey) === normalizeText(fieldName),
+               ),
+            );
+
+            return matchingKey === undefined
+               ? ""
+               : String(record[matchingKey]).trim();
+         }
+         // ==========================================
+         // CSV FUNCTIONS
+         // (YOUR EXISTING CODE BELOW)
+         // ==========================================
+
+         /**
+          * Converts formatted strings into numbers.
+          */
+         function parseNumber(value) {
+            return Number(String(value || "").replace(/[^0-9.-]/g, "")) || 0;
+         }
+
+         /**
+          * Parse CSV text into an array of objects.
+          * Supports quoted values and escaped quotes.
+          */
+         function parseCsv(csvText) {
+            let rows = [];
+            let currentRow = [];
+            let currentField = "";
+            let insideQuotes = false;
+
+            for (let i = 0; i < csvText.length; i++) {
+               const currentCharacter = csvText[i];
+               const nextCharacter = csvText[i + 1];
+
+               if (
+                  currentCharacter === '"' &&
+                  insideQuotes &&
+                  nextCharacter === '"'
+               ) {
+                  currentField += '"';
+                  i++;
+               } else if (currentCharacter === '"') {
+                  insideQuotes = !insideQuotes;
+               } else if (currentCharacter === "," && !insideQuotes) {
+                  currentRow.push(currentField);
+                  currentField = "";
+               } else if (
+                  (currentCharacter === "\n" || currentCharacter === "\r") &&
+                  !insideQuotes
+               ) {
+                  if (currentCharacter === "\r" && nextCharacter === "\n") {
+                     i++;
+                  }
+
+                  currentRow.push(currentField);
+
+                  if (currentRow.some((cell) => cell.trim())) {
+                     rows.push(currentRow);
+                  }
+
+                  currentRow = [];
+                  currentField = "";
+               } else {
+                  currentField += currentCharacter;
+               }
+            }
+
+            if (currentField || currentRow.length) {
+               currentRow.push(currentField);
+               rows.push(currentRow);
+            }
+
+            const headers = rows.shift() || [];
+
+            return rows.map((rowData) =>
+               Object.fromEntries(
+                  headers.map((header, index) => [
+                     header.trim(),
+                     rowData[index] || "",
+                  ]),
+               ),
+            );
+         }
+async function loadKpiCsv() {
+
+   try {
+
+      // Cache-bust so the browser/proxy doesn't serve a stale copy of
+      // the CSV between refreshes.
+      const response = await fetch(
+         `${CSV_PATH}?t=${Date.now()}`,
+         { cache: "no-store" }
+      );
+
+      if (!response.ok) {
+
+         throw new Error(
+            `Unable to load CSV (${response.status})`
+         );
+
+      }
+
+      const csvText =
+         await response.text();
+
+      const records =
+         parseCsv(csvText);
+
+      if (!records.length) {
+
+         console.warn(
+            "No KPI rows found."
+         );
+
+         stamp("error");
+
+         return;
+
+      }
+
+      const kpi =
+         records[0];
+
+      mapCsvKpiData(kpi);
+
+      stamp();
+
+   }
+   catch (error) {
+
+      console.error(
+         "CSV Load Error:",
+         error
+      );
+
+      stamp("error");
+
+   }
+
+}
+         // ==========================================
+         // STARTUP
+         // ==========================================
+
+         // Initialize dashboard once the page finishes loading.
+window.addEventListener("load", function () {
+   stamp();
+
+   loadKpiCsv();
+
+   if (REFRESH_INTERVAL_MS > 0) {
+      setInterval(loadKpiCsv, REFRESH_INTERVAL_MS);
+   }
+});
+      </script>
+   
+<script src="https://static.app/js/static.js" type="text/javascript"></script>
+</body>
+</html>
