@@ -1,0 +1,537 @@
+<!doctype html>
+
+<html lang="en">
+   <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
+      <title>Part Return Claims</title>
+      <style>
+         :root {
+            --n: #102a43;
+            --b: #1677c8;
+            --g: #16834b;
+            --a: #b56a00;
+            --r: #bc3434;
+            --s: #52616b;
+            --bg: #f3f6f9;
+            --l: #dce4ea;
+         }
+         * {
+            box-sizing: border-box;
+         }
+         body {
+            margin: 0;
+            background: var(--bg);
+            color: #172b3a;
+            font:
+               14px Segoe UI,
+               Arial,
+               sans-serif;
+         }
+         .shell {
+            max-width: 1500px;
+            margin: auto;
+         }
+         .top {
+            background: linear-gradient(120deg, var(--n), #1a5b91);
+            color: #fff;
+            padding: 26px 32px;
+         }
+         .toprow {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: center;
+         }
+         .top h1 {
+            margin: 0 0 6px;
+            font-size: 28px;
+         }
+         .top p {
+            margin: 0;
+            color: #d5e8f7;
+         }
+         .top a {
+            color: #d5e8f7;
+            font-size: 12px;
+         }
+         .stamp {
+            background: #ffffff1d;
+            border: 1px solid #ffffff36;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+         }
+         .section {
+            padding: 24px 32px 0;
+         }
+         .section h2 {
+            color: var(--n);
+            font-size: 18px;
+            margin: 0 0 8px;
+         }
+         .note,
+         .sub,
+         .muted {
+            color: var(--s);
+            font-size: 12px;
+         }
+         .panel {
+            background: #fff;
+            border: 1px solid var(--l);
+            border-radius: 10px;
+            padding: 17px;
+            box-shadow: 0 2px 8px #17324d0a;
+         }
+         .metrics {
+            display: grid;
+            gap: 8px;
+         }
+         .metric {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #edf1f4;
+            padding: 9px 0;
+         }
+         .metric:last-child {
+            border: 0;
+         }
+         .warn {
+            color: var(--a);
+         }
+         .bad {
+            color: var(--r);
+         }
+         table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            font-size: 12px;
+         }
+         th {
+            background: #eaf2f8;
+            color: var(--n);
+            text-align: left;
+            padding: 10px;
+            text-transform: uppercase;
+            font-size: 10px;
+         }
+         td {
+            padding: 10px;
+            border-top: 1px solid #edf1f4;
+         }
+         td.num {
+            text-align: right;
+         }
+         .badge {
+            border-radius: 99px;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            background: #fff2dc;
+         }
+         .badge.good {
+            background: #e5f5eb;
+         }
+         .badge.bad {
+            background: #fbe7e7;
+         }
+         .footer {
+            padding: 24px 32px;
+            color: var(--s);
+            font-size: 12px;
+         }
+         button {
+            padding: 8px 14px;
+            border: 1px solid var(--b);
+            border-radius: 6px;
+            background: var(--b);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+         }
+         input[type="password"] {
+            padding: 10px;
+            border: 1px solid var(--l);
+            border-radius: 6px;
+            width: 100%;
+            max-width: 280px;
+            font-size: 14px;
+         }
+         #gate {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+         }
+         #gate .panel {
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+         }
+         #gate h2 {
+            color: var(--n);
+            margin: 0 0 6px;
+         }
+         #gateForm {
+            display: grid;
+            gap: 12px;
+            margin-top: 14px;
+            justify-items: center;
+         }
+         #gateError {
+            color: var(--r);
+            font-size: 12px;
+            min-height: 16px;
+         }
+         [hidden] {
+            display: none !important;
+         }
+      </style>
+   </head>
+   <body>
+      <div id="gate">
+         <div class="panel">
+            <h2>Part Return Claims</h2>
+            <p class="sub">This page is restricted. Enter the access code to continue.</p>
+            <form id="gateForm">
+               <input
+                  id="gatePassword"
+                  type="password"
+                  placeholder="Access code"
+                  autocomplete="off"
+               />
+               <button type="submit">Unlock</button>
+               <div id="gateError"></div>
+            </form>
+         </div>
+      </div>
+
+      <div id="content" hidden>
+         <div class="shell">
+            <header class="top">
+               <div class="toprow">
+                  <div>
+                     <h1>Part Return Claims</h1>
+                     <p>Tracking factory / warranty part return claims.</p>
+                     <p><a href="index.html">&larr; Back to KPI Dashboard</a></p>
+                  </div>
+                  <div class="stamp">
+                     Updated: <span id="updated"></span><br />
+                     <a href="#" id="lockLink" style="color: #d5e8f7">Lock this page</a>
+                  </div>
+               </div>
+            </header>
+            <section class="section">
+               <h2>Open Claims</h2>
+               <p class="note">
+                  Pulled from a GitHub-hosted CSV and refreshed alongside the
+                  KPI dashboard.
+               </p>
+               <div class="panel">
+                  <div class="metrics" style="margin-bottom: 14px">
+                     <div class="metric">
+                        <span>Open claims</span
+                        ><strong class="warn" id="openClaimCount">—</strong>
+                     </div>
+                     <div class="metric">
+                        <span>Open claim value</span
+                        ><strong class="bad" id="openClaimValue">—</strong>
+                     </div>
+                  </div>
+                  <div style="overflow-x: auto">
+                     <table>
+                        <thead>
+                           <tr>
+                              <th>Claim #</th>
+                              <th>Part Number</th>
+                              <th>Description</th>
+                              <th>Submitted</th>
+                              <th>Status</th>
+                              <th>Amount</th>
+                           </tr>
+                        </thead>
+                        <tbody id="claimsTable">
+                           <tr>
+                              <td colspan="6" class="muted">Loading claims data…</td>
+                           </tr>
+                        </tbody>
+                     </table>
+                  </div>
+                  <button
+                     onclick="loadClaims()"
+                     style="margin-top: 14px"
+                  >
+                     Refresh Claims Data
+                  </button>
+               </div>
+            </section>
+            <footer class="footer">
+               Created by Sam Glidewell - Junge Automotive Group 2026
+            </footer>
+         </div>
+      </div>
+
+      <script>
+         // ==========================================
+         // ACCESS GATE
+         // ==========================================
+         // Client-side only — a speed bump against casual browsing, not real
+         // security. The underlying CSV is still fetchable directly by
+         // anyone with its raw GitHub URL, gate or no gate. Don't put
+         // anything here you wouldn't want technically reachable that way.
+         //
+         // To change the access code: pick a new phrase, get its SHA-256
+         // hex digest (e.g. in a browser console:
+         //   crypto.subtle.digest("SHA-256", new TextEncoder().encode("new code"))
+         //     .then(b => console.log([...new Uint8Array(b)].map(x => x.toString(16).padStart(2,"0")).join("")))
+         // ) and paste the result below. Current code: PartsReturns2026
+         const GATE_HASH =
+            "31a5bbe8665027b483a1d2c392dc22954d33b38f535685732d06379c64fae3f8";
+         const GATE_SESSION_KEY = "partReturnsUnlocked";
+
+         async function sha256Hex(text) {
+            const bytes = new TextEncoder().encode(text);
+            const digest = await crypto.subtle.digest("SHA-256", bytes);
+            return [...new Uint8Array(digest)]
+               .map((b) => b.toString(16).padStart(2, "0"))
+               .join("");
+         }
+
+         function showContent() {
+            document.getElementById("gate").hidden = true;
+            document.getElementById("content").hidden = false;
+            stamp();
+            loadClaims();
+         }
+
+         function showGate() {
+            document.getElementById("content").hidden = true;
+            document.getElementById("gate").hidden = false;
+         }
+
+         document.getElementById("gateForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const input = document.getElementById("gatePassword");
+            const errorEl = document.getElementById("gateError");
+            const hash = await sha256Hex(input.value);
+
+            if (hash === GATE_HASH) {
+               sessionStorage.setItem(GATE_SESSION_KEY, "1");
+               errorEl.textContent = "";
+               input.value = "";
+               showContent();
+            } else {
+               errorEl.textContent = "Incorrect access code.";
+            }
+         });
+
+         document.getElementById("lockLink").addEventListener("click", function (event) {
+            event.preventDefault();
+            sessionStorage.removeItem(GATE_SESSION_KEY);
+            showGate();
+         });
+
+         if (sessionStorage.getItem(GATE_SESSION_KEY) === "1") {
+            showContent();
+         }
+
+         // ==========================================
+         // CLAIMS DATA
+         // ==========================================
+         const CLAIMS_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/PartReturnClaims.csv";
+
+         function stamp() {
+            const now = new Date();
+            const timeText = now.toLocaleTimeString("en-US", {
+               hour: "numeric",
+               minute: "2-digit",
+            });
+            const el = document.getElementById("updated");
+            if (el) {
+               el.textContent = timeText;
+            }
+         }
+
+         function normalizeText(value) {
+            return String(value || "")
+               .toLowerCase()
+               .replace(/[^a-z0-9]/g, "");
+         }
+
+         function getFieldValue(record, fieldNames) {
+            const matchingKey = Object.keys(record).find((recordKey) =>
+               fieldNames.some(
+                  (fieldName) =>
+                     normalizeText(recordKey) === normalizeText(fieldName),
+               ),
+            );
+
+            return matchingKey === undefined
+               ? ""
+               : String(record[matchingKey]).trim();
+         }
+
+         function parseNumber(value) {
+            return Number(String(value || "").replace(/[^0-9.-]/g, "")) || 0;
+         }
+
+         function currency(value) {
+            return Number(value || 0).toLocaleString("en-US", {
+               style: "currency",
+               currency: "USD",
+            });
+         }
+
+         function escapeHtml(value) {
+            return String(value || "")
+               .replace(/&/g, "&amp;")
+               .replace(/</g, "&lt;")
+               .replace(/>/g, "&gt;");
+         }
+
+         /**
+          * Parse CSV text into an array of objects. Supports quoted values
+          * and escaped quotes.
+          */
+         function parseCsv(csvText) {
+            let rows = [];
+            let currentRow = [];
+            let currentField = "";
+            let insideQuotes = false;
+
+            for (let i = 0; i < csvText.length; i++) {
+               const currentCharacter = csvText[i];
+               const nextCharacter = csvText[i + 1];
+
+               if (
+                  currentCharacter === '"' &&
+                  insideQuotes &&
+                  nextCharacter === '"'
+               ) {
+                  currentField += '"';
+                  i++;
+               } else if (currentCharacter === '"') {
+                  insideQuotes = !insideQuotes;
+               } else if (currentCharacter === "," && !insideQuotes) {
+                  currentRow.push(currentField);
+                  currentField = "";
+               } else if (
+                  (currentCharacter === "\n" || currentCharacter === "\r") &&
+                  !insideQuotes
+               ) {
+                  if (currentCharacter === "\r" && nextCharacter === "\n") {
+                     i++;
+                  }
+
+                  currentRow.push(currentField);
+
+                  if (currentRow.some((cell) => cell.trim())) {
+                     rows.push(currentRow);
+                  }
+
+                  currentRow = [];
+                  currentField = "";
+               } else {
+                  currentField += currentCharacter;
+               }
+            }
+
+            if (currentField || currentRow.length) {
+               currentRow.push(currentField);
+               rows.push(currentRow);
+            }
+
+            const headers = rows.shift() || [];
+
+            return rows.map((rowData) =>
+               Object.fromEntries(
+                  headers.map((header, index) => [
+                     header.trim(),
+                     rowData[index] || "",
+                  ]),
+               ),
+            );
+         }
+
+         function renderClaims(records) {
+            const tbody = document.getElementById("claimsTable");
+            if (!tbody) {
+               return;
+            }
+
+            const openStatuses = ["submitted", "pending", "open", "underreview"];
+            const openRows = records.filter((record) =>
+               openStatuses.includes(
+                  normalizeText(getFieldValue(record, ["Status"])),
+               ),
+            );
+
+            const openValue = openRows.reduce(
+               (total, record) =>
+                  total + parseNumber(getFieldValue(record, ["Amount", "Claim Amount"])),
+               0,
+            );
+
+            document.getElementById("openClaimCount").textContent = String(openRows.length);
+            document.getElementById("openClaimValue").textContent = currency(openValue);
+
+            if (!records.length) {
+               tbody.innerHTML =
+                  '<tr><td colspan="6" class="muted">No return claims on file yet.</td></tr>';
+               return;
+            }
+
+            tbody.innerHTML = records
+               .map((record) => {
+                  const claimNumber = getFieldValue(record, ["Claim Number", "ClaimNumber", "Claim #", "Claim"]);
+                  const partNumber = getFieldValue(record, ["Part Number", "PartNumber"]);
+                  const description = getFieldValue(record, ["Description"]);
+                  const submitted = getFieldValue(record, ["Date Submitted", "DateSubmitted", "Submitted"]);
+                  const status = getFieldValue(record, ["Status"]);
+                  const amount = parseNumber(getFieldValue(record, ["Amount", "Claim Amount"]));
+
+                  return `<tr>
+                     <td>${escapeHtml(claimNumber)}</td>
+                     <td>${escapeHtml(partNumber)}</td>
+                     <td>${escapeHtml(description)}</td>
+                     <td>${escapeHtml(submitted)}</td>
+                     <td>${escapeHtml(status)}</td>
+                     <td class="num">${currency(amount)}</td>
+                  </tr>`;
+               })
+               .join("");
+         }
+
+         async function loadClaims() {
+            const tbody = document.getElementById("claimsTable");
+
+            try {
+               const response = await fetch(
+                  `${CLAIMS_CSV_PATH}?t=${Date.now()}`,
+                  { cache: "no-store" },
+               );
+
+               if (!response.ok) {
+                  throw new Error(`Unable to load claims CSV (${response.status})`);
+               }
+
+               const csvText = await response.text();
+               const records = parseCsv(csvText);
+
+               renderClaims(records);
+               stamp();
+            } catch (error) {
+               console.error("Claims CSV Load Error:", error);
+
+               if (tbody) {
+                  tbody.innerHTML =
+                     '<tr><td colspan="6" class="muted">Unable to load claims data.</td></tr>';
+               }
+            }
+         }
+      </script>
+   </body>
+</html>
