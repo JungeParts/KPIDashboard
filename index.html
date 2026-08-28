@@ -271,7 +271,7 @@
                   <h1>DealerTrack Parts Daily Dashboard</h1>
                   <p>
                      Demand Fill • Inventory Aging • Sales &amp; GP • Price
-                     Overrides • Unrealized Sales • Aged ROs &amp; PRI Parts
+                     Overrides • Unrealized Sales • Aged ROs
                   </p>
                </div>
                <div class="stamp">
@@ -463,95 +463,20 @@
             </div>
          </section>
          <section class="section">
-            <h2>Aged Service ROs &amp; PRI Parts CSV Feed</h2>
+            <h2>Aged Service ROs</h2>
             <p class="note">
-               Upload a DealerTrack daily CSV. Processing occurs locally in this
-               browser; no data leaves your machine.
+               Repair orders open more than 30 days, pulled from a
+               GitHub-hosted CSV and refreshed alongside the other KPI data.
             </p>
-            <div class="twocol">
-               <div class="panel">
-                  <h3>1. Choose CSV file</h3>
-                  <p class="sub">
-                     Flexible headers supported: RO, Open Date, Age Days,
-                     Status, PRI, Part Number, Description, Qty, Sale.
-                  </p>
-                  <input
-                     id="csvFile"
-                     type="file"
-                     accept=".csv,text/csv"
-                     style="margin-top: 10px; display: block; max-width: 100%"
-                  />
-               </div>
-               <div class="panel">
-                  <h3>2. Click Upload to load data</h3>
-                  <p class="sub">
-                     This forces the browser to read and process the selected
-                     file.
-                  </p>
-                  <button id="uploadBtn" style="margin-top: 10px">
-                     Upload CSV
-                  </button>
-                  <div class="metrics" style="margin-top: 14px">
-                     <div class="metric">
-                        <span>CSV rows loaded</span><strong id="rows">0</strong>
-                     </div>
-                     <div class="metric">
-                        <span>Aged open ROs (3+ days)</span
-                        ><strong class="warn" id="aged">—</strong>
-                     </div>
-                     <div class="metric">
-                        <span>PRI part lines</span
-                        ><strong class="warn" id="pri">—</strong>
-                     </div>
-                     <div class="metric">
-                        <span>PRI estimated sale value</span
-                        ><strong class="bad" id="priValue">—</strong>
-                     </div>
-                  </div>
-               </div>
-            </div>
             <div class="panel">
-               <h3>Open RO aging</h3>
-               <p class="sub">
-                  Uses Age Days or calculates age from Open Date.
-               </p>
-               <div class="bars">
-                  <div class="barrow">
-                     <span>0–2 days</span>
-                     <div class="track">
-                        <div class="fill g" id="b02" style="width: 0%"></div>
-                     </div>
-                     <strong id="a02">—</strong>
-                  </div>
-                  <div class="barrow">
-                     <span>3–5 days</span>
-                     <div class="track">
-                        <div class="fill a" id="b35" style="width: 0%"></div>
-                     </div>
-                     <strong id="a35">—</strong>
-                  </div>
-                  <div class="barrow">
-                     <span>6–10 days</span>
-                     <div class="track">
-                        <div class="fill a" id="b610" style="width: 0%"></div>
-                     </div>
-                     <strong id="a610">—</strong>
-                  </div>
-                  <div class="barrow">
-                     <span>11+ days</span>
-                     <div class="track">
-                        <div class="fill r" id="b11" style="width: 0%"></div>
-                     </div>
-                     <strong id="a11">—</strong>
+               <h3>Open 30+ days</h3>
+               <p class="sub">Sorted oldest first.</p>
+               <div class="metrics" style="margin-bottom: 14px">
+                  <div class="metric">
+                     <span>ROs open 30+ days</span
+                     ><strong class="warn" id="agedRoCount">—</strong>
                   </div>
                </div>
-            </div>
-            <div class="panel">
-               <h3>Priority follow-up queue</h3>
-               <p class="sub">
-                  Aged PRI lines sorted oldest first, then by estimated sale
-                  value.
-               </p>
                <div style="overflow-x: auto">
                   <table>
                      <thead>
@@ -559,16 +484,13 @@
                            <th>RO</th>
                            <th>Age</th>
                            <th>Status</th>
-                           <th>Part / Description</th>
-                           <th>Qty</th>
+                           <th>Description</th>
                            <th>Sale</th>
                         </tr>
                      </thead>
-                     <tbody id="queue">
+                     <tbody id="agedRoQueue">
                         <tr>
-                           <td colspan="6" class="muted">
-                              Upload a CSV to populate this table.
-                           </td>
+                           <td colspan="5" class="muted">Loading aged RO data…</td>
                         </tr>
                      </tbody>
                   </table>
@@ -637,6 +559,13 @@
          // Inventory aging-by-value buckets, kept in their own file since
          // they're updated on a different cadence than the daily KPI feed.
          const AGING_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/InventoryAging.csv";
+
+         // Service RO aging feed. Flexible headers supported: RO, Open
+         // Date, Age Days, Status, Description, Sale.
+         const AGED_RO_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/AgedServiceROs.csv";
+
+         // ROs at or above this age (in days) show up in the aged RO queue.
+         const AGED_RO_THRESHOLD_DAYS = 30;
 
          // How often to automatically re-pull the CSV, in milliseconds.
          // 300000 = 5 minutes. Set to 0 to disable auto-refresh (manual button only).
@@ -1035,11 +964,115 @@ async function loadKpiCsv() {
          }
 
          // ==========================================
+         // AGED SERVICE ROs (30+ days)
+         // ==========================================
+
+         function escapeHtml(value) {
+            return String(value || "")
+               .replace(/&/g, "&amp;")
+               .replace(/</g, "&lt;")
+               .replace(/>/g, "&gt;");
+         }
+
+         /**
+          * Age in days for a single RO record. Prefers an explicit Age Days
+          * column; falls back to calculating from Open Date.
+          */
+         function getRoAgeDays(record) {
+            const ageDaysValue = getFieldValue(record, ["Age Days", "AgeDays", "Age"]);
+            if (ageDaysValue !== "") {
+               return parseNumber(ageDaysValue);
+            }
+
+            const openDateValue = getFieldValue(record, ["Open Date", "OpenDate"]);
+            if (!openDateValue) {
+               return 0;
+            }
+
+            const openDate = new Date(openDateValue);
+            if (Number.isNaN(openDate.getTime())) {
+               return 0;
+            }
+
+            const msPerDay = 24 * 60 * 60 * 1000;
+            return Math.floor((Date.now() - openDate.getTime()) / msPerDay);
+         }
+
+         function renderAgedRoQueue(records) {
+            const tbody = document.getElementById("agedRoQueue");
+            if (!tbody) {
+               return;
+            }
+
+            const agedRows = records
+               .map((record) => ({ record, age: getRoAgeDays(record) }))
+               .filter((row) => row.age >= AGED_RO_THRESHOLD_DAYS)
+               .sort((a, b) => b.age - a.age);
+
+            setValue("agedRoCount", String(agedRows.length));
+
+            if (!agedRows.length) {
+               tbody.innerHTML =
+                  '<tr><td colspan="5" class="muted">No ROs currently open 30+ days.</td></tr>';
+               return;
+            }
+
+            tbody.innerHTML = agedRows
+               .map(({ record, age }) => {
+                  const ro = getFieldValue(record, ["RO", "RO Number", "RONumber"]);
+                  const status = getFieldValue(record, ["Status"]);
+                  const description =
+                     getFieldValue(record, ["Description", "Part Description"]) ||
+                     getFieldValue(record, ["Part Number", "PartNumber"]);
+                  const sale = parseNumber(getFieldValue(record, ["Sale", "Sale Amount"]));
+
+                  return `<tr>
+                     <td>${escapeHtml(ro)}</td>
+                     <td>${age}d</td>
+                     <td>${escapeHtml(status)}</td>
+                     <td>${escapeHtml(description)}</td>
+                     <td class="num">${currency(sale)}</td>
+                  </tr>`;
+               })
+               .join("");
+         }
+
+         async function loadAgedRoCsv() {
+            const tbody = document.getElementById("agedRoQueue");
+
+            try {
+               const response = await fetch(
+                  `${AGED_RO_CSV_PATH}?t=${Date.now()}`,
+                  { cache: "no-store" },
+               );
+
+               if (!response.ok) {
+                  throw new Error(
+                     `Unable to load aged RO CSV (${response.status})`,
+                  );
+               }
+
+               const csvText = await response.text();
+               const records = parseCsv(csvText);
+
+               renderAgedRoQueue(records);
+            } catch (error) {
+               console.error("Aged RO CSV Load Error:", error);
+
+               setValue("agedRoCount", "—");
+               if (tbody) {
+                  tbody.innerHTML =
+                     '<tr><td colspan="5" class="muted">Unable to load aged RO data.</td></tr>';
+               }
+            }
+         }
+
+         // ==========================================
          // STARTUP
          // ==========================================
 
          async function refreshAllData() {
-            await Promise.all([loadKpiCsv(), loadAgingCsv()]);
+            await Promise.all([loadKpiCsv(), loadAgingCsv(), loadAgedRoCsv()]);
          }
 
          // Initialize dashboard once the page finishes loading.
