@@ -421,12 +421,12 @@
             </p>
             <div class="grid">
                <div class="card">
-                  <div class="label">Parts Sales Today</div>
+                  <div class="label" id="PartsSalesTodayLabel">Parts Sales Today</div>
                   <div class="value" id="PartsSalesToday">$12,480</div>
                   <div class="detail good"></div>
                </div>
                <div class="card">
-                  <div class="label">Gross Profit Today</div>
+                  <div class="label" id="GrossProfitTodayLabel">Gross Profit Today</div>
                   <div class="value" id="GrossProfitToday">$4,930</div>
                   <div class="detail good"></div>
                </div>
@@ -677,6 +677,24 @@
          }
 
          /**
+          * Card labels report the prior business day's activity (DealerTrack's
+          * daily feed lands the morning after), so the label itself should
+          * read that date rather than a static "Today".
+          */
+         function updateDailyLabels() {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            const dateText = yesterday.toLocaleDateString("en-US", {
+               month: "short",
+               day: "numeric",
+            });
+
+            setValue("PartsSalesTodayLabel", `Parts Sales (${dateText})`);
+            setValue("GrossProfitTodayLabel", `Gross Profit (${dateText})`);
+         }
+
+         /**
           * Updates the "Reporting date" and "Updated" stamp in the header.
           * status: "" (normal), "loading", or "error" — used to give a
           * quick visual cue when the last refresh attempt failed.
@@ -709,6 +727,8 @@
                   updatedEl.style.color = "";
                }
             }
+
+            updateDailyLabels();
          }
 
  function mapCsvKpiData(kpi) {
