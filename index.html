@@ -510,13 +510,13 @@
                   <tr>
                      <td>Demand fill rate</td>
                      <td class="num" id="ScoreDemandFillRate">-</td>
-                     <td class="num" id="ScoreDemandFillRateTarget">95.0%</td>
+                     <td class="num">95.0%</td>
                      <td><span class="badge">Watch</span></td>
                   </tr>
                   <tr>
                      <td>Parts gross profit</td>
                      <td class="num" id="ScoreGrossProfit">-</td>
-                     <td class="num" id="ScoreGrossProfitTarget">40.0%</td>
+                     <td class="num">40.0%</td>
                      <td><span class="badge good">Above target</span></td>
                   </tr>
                   <tr>
@@ -745,43 +745,18 @@
 }
 
 /**
- * Reads the text sitting in a KPI card's ".detail" line (e.g. "Target:
- * 95.0%"), which always follows the card's ".value" element in the markup.
- */
-function getCardDetailText(valueId) {
-   const valueEl = document.getElementById(valueId);
-   return valueEl && valueEl.nextElementSibling
-      ? valueEl.nextElementSibling.textContent
-      : "";
-}
-
-function extractTarget(detailText) {
-   const match = String(detailText || "").match(/Target:\s*(.+)/i);
-   return match ? match[1].trim() : null;
-}
-
-/**
- * Mirrors the Daily Scorecard's Current/Target columns from the matching
- * KPI cards above, so the two views can't drift out of sync. Only rows
- * with an obvious matching card are wired up — "Price override rate" has
- * no single corresponding value above (Override Lines is a count, not a
- * rate), so it's left as-is.
+ * Mirrors the Daily Scorecard's Current column from the matching KPI
+ * cards above. Targets are left as fixed business goals set directly in
+ * the scorecard, not sourced from the cards. Only rows with an obvious
+ * matching card are wired up — "Price override rate" has no single
+ * corresponding value above (Override Lines is a count, not a rate), so
+ * it's left as-is.
  */
 function syncScorecard() {
    setValue("ScoreDemandFillRate", document.getElementById("DemandFillRate")?.textContent ?? "-");
    setValue("ScoreGrossProfit", document.getElementById("GrossProfitPercent")?.textContent ?? "-");
    setValue("ScoreObsolescence", document.getElementById("Obsolescence")?.textContent ?? "-");
    setValue("ScoreUnrealizedSales", document.getElementById("UnrealizedSales")?.textContent ?? "-");
-
-   const demandFillTarget = extractTarget(getCardDetailText("DemandFillRate"));
-   if (demandFillTarget) {
-      setValue("ScoreDemandFillRateTarget", demandFillTarget);
-   }
-
-   const grossProfitTarget = extractTarget(getCardDetailText("GrossProfitPercent"));
-   if (grossProfitTarget) {
-      setValue("ScoreGrossProfitTarget", grossProfitTarget);
-   }
 }
 
          // ==========================================
