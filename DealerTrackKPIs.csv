@@ -1,2 +1,2 @@
 DemandFillRate,GrossProfitPercent,LostSales,BackorderLines,InventoryOnHand,Obsolescence,AnnualizedTurns,ExcessInventory,PartsSalesToday,GrossProfitToday,OverrideLines,OverrideGPImpact,UnrealizedSales,UnrealizedGP,AvgGPPerRO,CounterSalesToday
-91.84,35.3,3242.03,-,243739,3,-,69,-,-,17,1168.6,136562.02,50152.08,-,-
+91.84,35.3,3242.03,-,243739,3,-,69,35201.05,11778.08,17,1168.6,136562.02,50152.08,-,-
