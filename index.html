@@ -216,6 +216,12 @@
          td.num {
             text-align: right;
          }
+         #scorecardTable th:nth-child(2),
+         #scorecardTable th:nth-child(3),
+         #scorecardTable td:nth-child(2),
+         #scorecardTable td:nth-child(3) {
+            text-align: center;
+         }
          .badge {
             border-radius: 99px;
             padding: 4px 8px;
@@ -497,7 +503,7 @@
          </section>
          <section class="section">
             <h2>Daily Scorecard</h2>
-            <table>
+            <table id="scorecardTable">
                <thead>
                   <tr>
                      <th>Metric</th>
@@ -510,20 +516,20 @@
                   <tr>
                      <td>Demand fill rate</td>
                      <td class="num" id="ScoreDemandFillRate">-</td>
-                     <td class="num">95.0%</td>
-                     <td><span class="badge">Watch</span></td>
+                     <td class="num" id="ScoreDemandFillRateTarget">95.0%</td>
+                     <td><span class="badge" id="ScoreDemandFillRateStatus">Watch</span></td>
                   </tr>
                   <tr>
                      <td>Parts gross profit</td>
                      <td class="num" id="ScoreGrossProfit">-</td>
-                     <td class="num">40.0%</td>
-                     <td><span class="badge good">Above target</span></td>
+                     <td class="num" id="ScoreGrossProfitTarget">40.0%</td>
+                     <td><span class="badge good" id="ScoreGrossProfitStatus">Above target</span></td>
                   </tr>
                   <tr>
                      <td>Obsolescence</td>
                      <td class="num" id="ScoreObsolescence"></td>
-                     <td class="num">3.0%</td>
-                     <td><span class="badge good">On target</span></td>
+                     <td class="num" id="ScoreObsolescenceTarget">3.0%</td>
+                     <td><span class="badge good" id="ScoreObsolescenceStatus">On target</span></td>
                   </tr>
                   <tr>
                      <td>Price override rate</td>
@@ -745,17 +751,74 @@
 }
 
 /**
- * Mirrors the Daily Scorecard's Current column from the matching KPI
- * cards above. Targets are left as fixed business goals set directly in
- * the scorecard, not sourced from the cards. Only rows with an obvious
- * matching card are wired up — "Price override rate" has no single
- * corresponding value above (Override Lines is a count, not a rate), so
- * it's left as-is.
+ * Compares a Current reading against a (still fixed, manually-set) Target
+ * and picks a status badge. "higher" metrics are good at/above target;
+ * "lower" metrics are good at/below target. A 10% band beyond target is
+ * "Watch" before it counts as "Needs action".
+ */
+function computeStatus(currentText, targetText, direction) {
+   const current = parseNumber(currentText);
+   const target = parseNumber(targetText);
+
+   if (!targetText || Number.isNaN(current) || target === 0) {
+      return null;
+   }
+
+   const onTarget = direction === "higher" ? current >= target : current <= target;
+   if (onTarget) {
+      return { label: "On target", cls: "good" };
+   }
+
+   const watchBand = direction === "higher"
+      ? current >= target * 0.9
+      : current <= target * 1.1;
+
+   return watchBand
+      ? { label: "Watch", cls: "" }
+      : { label: "Needs action", cls: "bad" };
+}
+
+function setStatusBadge(id, status) {
+   const el = document.getElementById(id);
+   if (!el || !status) {
+      return;
+   }
+
+   el.textContent = status.label;
+   el.className = status.cls ? `badge ${status.cls}` : "badge";
+}
+
+/**
+ * Mirrors the Daily Scorecard's Current column and Status badges from the
+ * matching KPI cards above. Targets are left as fixed business goals set
+ * directly in the scorecard (read here only to compute status, never
+ * written to). Only rows with an obvious matching card are wired up —
+ * "Price override rate" has no single corresponding value above (Override
+ * Lines is a count, not a rate), and "Unrealized sales" has no target to
+ * compare against, so both are left as-is.
  */
 function syncScorecard() {
-   setValue("ScoreDemandFillRate", document.getElementById("DemandFillRate")?.textContent ?? "-");
-   setValue("ScoreGrossProfit", document.getElementById("GrossProfitPercent")?.textContent ?? "-");
-   setValue("ScoreObsolescence", document.getElementById("Obsolescence")?.textContent ?? "-");
+   const demandFillCurrent = document.getElementById("DemandFillRate")?.textContent ?? "-";
+   setValue("ScoreDemandFillRate", demandFillCurrent);
+   setStatusBadge(
+      "ScoreDemandFillRateStatus",
+      computeStatus(demandFillCurrent, document.getElementById("ScoreDemandFillRateTarget")?.textContent, "higher"),
+   );
+
+   const grossProfitCurrent = document.getElementById("GrossProfitPercent")?.textContent ?? "-";
+   setValue("ScoreGrossProfit", grossProfitCurrent);
+   setStatusBadge(
+      "ScoreGrossProfitStatus",
+      computeStatus(grossProfitCurrent, document.getElementById("ScoreGrossProfitTarget")?.textContent, "higher"),
+   );
+
+   const obsolescenceCurrent = document.getElementById("Obsolescence")?.textContent ?? "-";
+   setValue("ScoreObsolescence", obsolescenceCurrent);
+   setStatusBadge(
+      "ScoreObsolescenceStatus",
+      computeStatus(obsolescenceCurrent, document.getElementById("ScoreObsolescenceTarget")?.textContent, "lower"),
+   );
+
    setValue("ScoreUnrealizedSales", document.getElementById("UnrealizedSales")?.textContent ?? "-");
 }
 
