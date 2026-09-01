@@ -24,6 +24,19 @@ up to ~5 minutes to show up on the dashboard even though the page itself
 re-fetches every 5 minutes (`REFRESH_INTERVAL_MS`) or on demand via the
 "Refresh KPI Data" button.
 
+**Number formatting in the sheet:** if a cell is formatted as Currency or
+Percent, the published CSV contains the *displayed text* (`"$624,000.00"`,
+`"94.20%"`), not the underlying number. The dashboard code strips `$`, `,`,
+and `%` before doing math, so formatted cells work, but two things still
+trip people up:
+- A negative number shown in accounting style with parentheses, e.g.
+  `"($3,240.03)"`, loses its sign once the parentheses are stripped — it
+  will display as a positive value. Use a plain minus sign (`-3240.03`)
+  for negatives instead.
+- It's simplest to just leave KPI cells formatted as **Plain text** or
+  **Number** (no currency/percent symbol) and let the dashboard add the
+  `$`/`%` for display — one less place for the two to disagree.
+
 Row 1 of each tab must be the header row, using (or close to) the column
 names listed below — matching is case- and punctuation-insensitive, and a
 few common alternate wordings are accepted, but the header text still has

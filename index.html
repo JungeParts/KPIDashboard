@@ -561,10 +561,18 @@
          }
 
          function currency(value) {
-            return Number(value || 0).toLocaleString("en-US", {
+            return parseNumber(value).toLocaleString("en-US", {
                style: "currency",
                currency: "USD",
             });
+         }
+
+         // Formats a percent field for display. Handles both a raw number
+         // ("94.2") and a value a spreadsheet already rendered as text with
+         // its own "%" sign ("94.20%") — parseNumber strips non-numeric
+         // characters either way, so this never double-stamps the sign.
+         function percent(value) {
+            return `${parseNumber(value)}%`;
          }
 
          // Abbreviated currency for the aging bars, e.g. $449K, $1.2M.
@@ -642,12 +650,12 @@
 
    setValue(
       "DemandFillRate",
-      `${getFieldValue(kpi, ["DemandFillRate", "Demand Fill Rate", "Shelf Fill Rate"])}%`
+      percent(getFieldValue(kpi, ["DemandFillRate", "Demand Fill Rate", "Shelf Fill Rate"]))
    );
 
    setValue(
       "GrossProfitPercent",
-      `${getFieldValue(kpi, ["GrossProfitPercent", "Gross Profit Percent", "Gross Profit %"])}%`
+      percent(getFieldValue(kpi, ["GrossProfitPercent", "Gross Profit Percent", "Gross Profit %"]))
    );
 
    setValue(
@@ -667,12 +675,12 @@
 
    setValue(
       "Obsolescence",
-      `${getFieldValue(kpi, ["Obsolescence"])}%`
+      percent(getFieldValue(kpi, ["Obsolescence"]))
    );
 
    setValue(
       "ExcessInventory",
-      `${getFieldValue(kpi, ["ExcessInventory", "Excess Inventory"])}%`
+      percent(getFieldValue(kpi, ["ExcessInventory", "Excess Inventory"]))
    );
 
    setValue(
