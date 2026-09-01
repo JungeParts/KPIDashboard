@@ -453,13 +453,13 @@
                   <div class="detail bad">Estimated missed gross</div>
                </div>
                <div class="card">
-                  <div class="label">Avg GP per RO</div>
-                  <div class="value" id="AvgGPPerRO">$96.88</div>
+                  <div class="label">Internal Sales</div>
+                  <div class="value" id="InternalSales">$96.88</div>
                   <div class="detail warn"></div>
                </div>
                <div class="card">
-                  <div class="label">Counter Sales Today</div>
-                  <div class="value" id="CounterSalesToday">$3,940</div>
+                  <div class="label">Sales By EP</div>
+                  <div class="value" id="SalesByEP">$3,940</div>
                   <div class="detail good"></div>
                </div>
             </div>
@@ -701,13 +701,13 @@
    );
 
    setValue(
-      "AvgGPPerRO",
-      currency(kpi.AvgGPPerRO)
+      "InternalSales",
+      currency(kpi.InternalSales)
    );
 
    setValue(
-      "CounterSalesToday",
-      currency(kpi.CounterSalesToday)
+      "SalesByEP",
+      currency(kpi.SalesByEP)
    );
 
    syncScorecard();
