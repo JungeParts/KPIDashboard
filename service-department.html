@@ -1,0 +1,626 @@
+<!doctype html>
+
+<html lang="en">
+   <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
+      <title>Service Department Dashboard</title>
+      <style>
+         :root {
+            --n: #102a43;
+            --b: #1677c8;
+            --g: #16834b;
+            --a: #b56a00;
+            --r: #bc3434;
+            --s: #52616b;
+            --bg: #f3f6f9;
+            --l: #dce4ea;
+         }
+         * {
+            box-sizing: border-box;
+         }
+         body {
+            margin: 0;
+            background: var(--bg);
+            color: #172b3a;
+            font:
+               14px Segoe UI,
+               Arial,
+               sans-serif;
+         }
+         .shell {
+            max-width: 1500px;
+            margin: auto;
+         }
+         .top {
+            background: linear-gradient(120deg, var(--n), #1a5b91);
+            color: #fff;
+            padding: 26px 32px;
+         }
+         .toprow {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: center;
+         }
+         .top h1 {
+            margin: 0 0 6px;
+            font-size: 28px;
+         }
+         .top p {
+            margin: 0;
+            color: #d5e8f7;
+         }
+         .stamp {
+            background: #ffffff1d;
+            border: 1px solid #ffffff36;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+         }
+         .filters {
+            background: #fff;
+            padding: 14px 32px;
+            border-bottom: 1px solid var(--l);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+         }
+         .filters label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--s);
+         }
+         select,
+         button {
+            padding: 8px;
+            border: 1px solid var(--l);
+            border-radius: 6px;
+            background: #fff;
+         }
+         button {
+            background: var(--b);
+            border-color: var(--b);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+         }
+         .section {
+            padding: 24px 32px 0;
+         }
+         .section h2 {
+            color: var(--n);
+            font-size: 18px;
+            margin: 0 0 8px;
+         }
+         .note,
+         .sub,
+         .muted {
+            color: var(--s);
+            font-size: 12px;
+         }
+         .grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(200px, 1fr));
+            gap: 14px;
+         }
+         .card,
+         .panel {
+            background: #fff;
+            border: 1px solid var(--l);
+            border-radius: 10px;
+            padding: 17px;
+            box-shadow: 0 2px 8px #17324d0a;
+         }
+         .label {
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--s);
+            font-weight: 700;
+            font-size: 11px;
+         }
+         .value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--n);
+            margin: 9px 0 5px;
+         }
+         .detail {
+            font-size: 12px;
+            color: var(--s);
+         }
+         .good {
+            color: var(--g);
+         }
+         .warn {
+            color: var(--a);
+         }
+         .bad {
+            color: var(--r);
+         }
+         .panel h3 {
+            color: var(--n);
+            font-size: 15px;
+            margin: 0 0 4px;
+         }
+         .metrics {
+            display: grid;
+            gap: 8px;
+         }
+         .metric {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #edf1f4;
+            padding: 9px 0;
+         }
+         .metric:last-child {
+            border: 0;
+         }
+         table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            font-size: 12px;
+         }
+         th {
+            background: #eaf2f8;
+            color: var(--n);
+            text-align: left;
+            padding: 10px;
+            text-transform: uppercase;
+            font-size: 10px;
+         }
+         td {
+            padding: 10px;
+            border-top: 1px solid #edf1f4;
+         }
+         td.num {
+            text-align: right;
+         }
+         .footer {
+            padding: 24px 32px;
+            color: var(--s);
+            font-size: 12px;
+         }
+         @media (max-width: 980px) {
+            .grid {
+               grid-template-columns: repeat(2, 1fr);
+            }
+            .toprow {
+               flex-direction: column;
+               align-items: flex-start;
+            }
+         }
+         @media (max-width: 560px) {
+            .section,
+            .top,
+            .filters,
+            .footer {
+               padding-left: 16px;
+               padding-right: 16px;
+            }
+            .grid {
+               grid-template-columns: 1fr;
+            }
+         }
+      </style>
+   </head>
+   <body>
+      <div class="shell">
+         <header class="top">
+            <div class="toprow">
+               <div>
+                  <h1>Service Department Dashboard</h1>
+                  <p>Work In Process • Aged Service ROs</p>
+               </div>
+               <div class="stamp">
+                  Reporting date: <strong id="date">Today</strong><br />Updated:
+                  <span id="updated"></span>
+               </div>
+            </div>
+         </header>
+         <div class="filters">
+            <label
+               >Location
+               <select>
+                  <option>Junge North Liberty</option>
+               </select></label
+            ><label
+               >Department
+               <select id="departmentSelect">
+                  <option value="index.html">Parts</option>
+                  <option value="service-department.html" selected>Service</option>
+               </select></label
+            ><button onclick="refreshAllData()">
+   Refresh KPI Data
+</button>
+         </div>
+         <section class="section">
+            <h2>Work In Process</h2>
+            <p class="note">DealerTrack stock status / aging report.</p>
+            <div class="grid">
+               <div class="card">
+                  <div class="label">Work In Process</div>
+                  <div class="value" id="WorkInProcess">—</div>
+                  <div class="detail good"></div>
+               </div>
+            </div>
+         </section>
+         <section class="section">
+            <h2>Aged Service ROs</h2>
+            <div class="panel">
+               <h3>Open 30+ days</h3>
+               <p class="sub">Sorted oldest first.</p>
+               <div class="metrics" style="margin-bottom: 14px">
+                  <div class="metric">
+                     <span>ROs open 30+ days</span
+                     ><strong class="warn" id="agedRoCount">—</strong>
+                  </div>
+               </div>
+               <div style="overflow-x: auto">
+                  <table>
+                     <thead>
+                        <tr>
+                           <th>RO</th>
+                           <th>Age</th>
+                           <th>Status</th>
+                           <th>Description</th>
+                           <th>Sale</th>
+                        </tr>
+                     </thead>
+                     <tbody id="agedRoQueue">
+                        <tr>
+                           <td colspan="5" class="muted">Loading aged RO data…</td>
+                        </tr>
+                     </tbody>
+                  </table>
+               </div>
+            </div>
+         </section>
+         <footer class="footer">
+            Created by Sam Glidewell - Junge Automotive Group 2026 ·
+            <a href="index.html">Parts Dashboard</a> ·
+            <a href="part-returns.html">Part Return Claims</a>
+         </footer>
+      </div>
+      <script>
+
+         // ==========================================
+         // CONFIG
+         // ==========================================
+         // Same DealerTrack feed the Parts dashboard uses — Work In Process
+         // lives in that CSV alongside the parts KPIs.
+         const CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/DealerTrackKPIs.csv";
+
+         // Service RO aging feed. Flexible headers supported: RO, Open
+         // Date, Age Days, Status, Description, Sale.
+         const AGED_RO_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/AgedServiceROs.csv";
+
+         // ROs at or above this age (in days) show up in the aged RO queue.
+         const AGED_RO_THRESHOLD_DAYS = 30;
+
+         // How often to automatically re-pull the CSV, in milliseconds.
+         // 300000 = 5 minutes. Set to 0 to disable auto-refresh (manual button only).
+         const REFRESH_INTERVAL_MS = 300000;
+
+         // ==========================================
+         // NAVIGATION
+         // ==========================================
+
+         document.getElementById("departmentSelect").addEventListener("change", function (event) {
+            const target = event.target.value;
+            if (target) {
+               window.location.href = target;
+            }
+         });
+
+         // ==========================================
+         // KPI MAPPING
+         // ==========================================
+
+         function setValue(id, value) {
+            const element = document.getElementById(id);
+
+            if (element) {
+               element.textContent = value;
+            }
+         }
+
+         function currency(value) {
+            return Number(value || 0).toLocaleString("en-US", {
+               style: "currency",
+               currency: "USD",
+            });
+         }
+
+         /**
+          * Updates the "Reporting date" and "Updated" stamp in the header.
+          * status: "" (normal), "loading", or "error" — used to give a
+          * quick visual cue when the last refresh attempt failed.
+          */
+         function stamp(status) {
+            const now = new Date();
+
+            setValue(
+               "date",
+               now.toLocaleDateString("en-US", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+               }),
+            );
+
+            const timeText = now.toLocaleTimeString("en-US", {
+               hour: "numeric",
+               minute: "2-digit",
+            });
+
+            const updatedEl = document.getElementById("updated");
+            if (updatedEl) {
+               if (status === "error") {
+                  updatedEl.textContent = `Refresh failed at ${timeText} — showing last known data`;
+                  updatedEl.style.color = "#ffb4b4";
+               } else {
+                  updatedEl.textContent = timeText;
+                  updatedEl.style.color = "";
+               }
+            }
+         }
+
+         function mapCsvKpiData(kpi) {
+            setValue("WorkInProcess", currency(kpi.WorkInProcess));
+         }
+
+         // ==========================================
+         // SOURCE SWITCHER
+         // ==========================================
+
+         function normalizeText(value) {
+            return String(value || "")
+               .toLowerCase()
+               .replace(/[^a-z0-9]/g, "");
+         }
+         /**
+          * Returns the first matching field value
+          * using flexible header matching.
+          */
+         function getFieldValue(record, fieldNames) {
+            const matchingKey = Object.keys(record).find((recordKey) =>
+               fieldNames.some(
+                  (fieldName) =>
+                     normalizeText(recordKey) === normalizeText(fieldName),
+               ),
+            );
+
+            return matchingKey === undefined
+               ? ""
+               : String(record[matchingKey]).trim();
+         }
+
+         // ==========================================
+         // CSV FUNCTIONS
+         // ==========================================
+
+         /**
+          * Converts formatted strings into numbers.
+          */
+         function parseNumber(value) {
+            return Number(String(value || "").replace(/[^0-9.-]/g, "")) || 0;
+         }
+
+         /**
+          * Parse CSV text into an array of objects.
+          * Supports quoted values and escaped quotes.
+          */
+         function parseCsv(csvText) {
+            let rows = [];
+            let currentRow = [];
+            let currentField = "";
+            let insideQuotes = false;
+
+            for (let i = 0; i < csvText.length; i++) {
+               const currentCharacter = csvText[i];
+               const nextCharacter = csvText[i + 1];
+
+               if (
+                  currentCharacter === '"' &&
+                  insideQuotes &&
+                  nextCharacter === '"'
+               ) {
+                  currentField += '"';
+                  i++;
+               } else if (currentCharacter === '"') {
+                  insideQuotes = !insideQuotes;
+               } else if (currentCharacter === "," && !insideQuotes) {
+                  currentRow.push(currentField);
+                  currentField = "";
+               } else if (
+                  (currentCharacter === "\n" || currentCharacter === "\r") &&
+                  !insideQuotes
+               ) {
+                  if (currentCharacter === "\r" && nextCharacter === "\n") {
+                     i++;
+                  }
+
+                  currentRow.push(currentField);
+
+                  if (currentRow.some((cell) => cell.trim())) {
+                     rows.push(currentRow);
+                  }
+
+                  currentRow = [];
+                  currentField = "";
+               } else {
+                  currentField += currentCharacter;
+               }
+            }
+
+            if (currentField || currentRow.length) {
+               currentRow.push(currentField);
+               rows.push(currentRow);
+            }
+
+            const headers = rows.shift() || [];
+
+            return rows.map((rowData) =>
+               Object.fromEntries(
+                  headers.map((header, index) => [
+                     header.trim(),
+                     rowData[index] || "",
+                  ]),
+               ),
+            );
+         }
+
+         async function loadKpiCsv() {
+            try {
+               const response = await fetch(
+                  `${CSV_PATH}?t=${Date.now()}`,
+                  { cache: "no-store" },
+               );
+
+               if (!response.ok) {
+                  throw new Error(`Unable to load CSV (${response.status})`);
+               }
+
+               const csvText = await response.text();
+               const records = parseCsv(csvText);
+
+               if (!records.length) {
+                  console.warn("No KPI rows found.");
+                  stamp("error");
+                  return;
+               }
+
+               mapCsvKpiData(records[0]);
+               stamp();
+            } catch (error) {
+               console.error("CSV Load Error:", error);
+               stamp("error");
+            }
+         }
+
+         // ==========================================
+         // AGED SERVICE ROs (30+ days)
+         // ==========================================
+
+         function escapeHtml(value) {
+            return String(value || "")
+               .replace(/&/g, "&amp;")
+               .replace(/</g, "&lt;")
+               .replace(/>/g, "&gt;");
+         }
+
+         /**
+          * Age in days for a single RO record. Prefers an explicit Age Days
+          * column; falls back to calculating from Open Date.
+          */
+         function getRoAgeDays(record) {
+            const ageDaysValue = getFieldValue(record, ["Age Days", "AgeDays", "Age"]);
+            if (ageDaysValue !== "") {
+               return parseNumber(ageDaysValue);
+            }
+
+            const openDateValue = getFieldValue(record, ["Open Date", "OpenDate"]);
+            if (!openDateValue) {
+               return 0;
+            }
+
+            const openDate = new Date(openDateValue);
+            if (Number.isNaN(openDate.getTime())) {
+               return 0;
+            }
+
+            const msPerDay = 24 * 60 * 60 * 1000;
+            return Math.floor((Date.now() - openDate.getTime()) / msPerDay);
+         }
+
+         function renderAgedRoQueue(records) {
+            const tbody = document.getElementById("agedRoQueue");
+            if (!tbody) {
+               return;
+            }
+
+            const agedRows = records
+               .map((record) => ({ record, age: getRoAgeDays(record) }))
+               .filter((row) => row.age >= AGED_RO_THRESHOLD_DAYS)
+               .sort((a, b) => b.age - a.age);
+
+            setValue("agedRoCount", String(agedRows.length));
+
+            if (!agedRows.length) {
+               tbody.innerHTML =
+                  '<tr><td colspan="5" class="muted">No ROs currently open 30+ days.</td></tr>';
+               return;
+            }
+
+            tbody.innerHTML = agedRows
+               .map(({ record, age }) => {
+                  const ro = getFieldValue(record, ["RO", "RO Number", "RONumber"]);
+                  const status = getFieldValue(record, ["Status"]);
+                  const description =
+                     getFieldValue(record, ["Description", "Part Description"]) ||
+                     getFieldValue(record, ["Part Number", "PartNumber"]);
+                  const sale = parseNumber(getFieldValue(record, ["Sale", "Sale Amount"]));
+
+                  return `<tr>
+                     <td>${escapeHtml(ro)}</td>
+                     <td>${age}d</td>
+                     <td>${escapeHtml(status)}</td>
+                     <td>${escapeHtml(description)}</td>
+                     <td class="num">${currency(sale)}</td>
+                  </tr>`;
+               })
+               .join("");
+         }
+
+         async function loadAgedRoCsv() {
+            const tbody = document.getElementById("agedRoQueue");
+
+            try {
+               const response = await fetch(
+                  `${AGED_RO_CSV_PATH}?t=${Date.now()}`,
+                  { cache: "no-store" },
+               );
+
+               if (!response.ok) {
+                  throw new Error(
+                     `Unable to load aged RO CSV (${response.status})`,
+                  );
+               }
+
+               const csvText = await response.text();
+               const records = parseCsv(csvText);
+
+               renderAgedRoQueue(records);
+            } catch (error) {
+               console.error("Aged RO CSV Load Error:", error);
+
+               setValue("agedRoCount", "—");
+               if (tbody) {
+                  tbody.innerHTML =
+                     '<tr><td colspan="5" class="muted">Unable to load aged RO data.</td></tr>';
+               }
+            }
+         }
+
+         // ==========================================
+         // STARTUP
+         // ==========================================
+
+         async function refreshAllData() {
+            await Promise.all([loadKpiCsv(), loadAgedRoCsv()]);
+         }
+
+         window.addEventListener("load", function () {
+            stamp();
+            refreshAllData();
+
+            if (REFRESH_INTERVAL_MS > 0) {
+               setInterval(refreshAllData, REFRESH_INTERVAL_MS);
+            }
+         });
+      </script>
+   </body>
+</html>
