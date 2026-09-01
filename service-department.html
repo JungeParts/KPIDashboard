@@ -383,11 +383,11 @@
          // Publish to web > pick the sheet tab > Comma-separated values)
          // so it can be updated by editing the sheet directly — no GitHub
          // commit required. See GOOGLE_SHEETS_SETUP.md for column headers.
-         const CSV_PATH = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQI0g5m_t9ZTY_vblmMwUSQ3YvnkH7L7AxeUkhBabfFUy_blfkPyOC50gcZDx9_IQUvcbarD2of-D9i/pub?gid=0&single=true&output=csv";
+         const CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=0";
 
          // Service RO aging feed. Flexible headers supported: RO, Open
          // Date, Age Days, Status, Description, Sale.
-         const AGED_RO_CSV_PATH = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQI0g5m_t9ZTY_vblmMwUSQ3YvnkH7L7AxeUkhBabfFUy_blfkPyOC50gcZDx9_IQUvcbarD2of-D9i/pub?gid=1859877212&single=true&output=csv";
+         const AGED_RO_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=1859877212";
 
          // ROs at or above this age (in days) show up in the aged RO queue.
          const AGED_RO_THRESHOLD_DAYS = 30;
@@ -395,13 +395,13 @@
          // ROs with parts on backorder. Manually maintained — a Google
          // Sheets tab, updated by editing rows, replaces the old
          // upload-a-CSV-file-to-GitHub workflow.
-         const BACKORDERED_PARTS_CSV_PATH = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQI0g5m_t9ZTY_vblmMwUSQ3YvnkH7L7AxeUkhBabfFUy_blfkPyOC50gcZDx9_IQUvcbarD2of-D9i/pub?gid=1865302902&single=true&output=csv";
+         const BACKORDERED_PARTS_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=1865302902";
 
          // Internal service follow-up queue. Manually maintained — see note above.
-         const UPTIME_ASSIST_CSV_PATH = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQI0g5m_t9ZTY_vblmMwUSQ3YvnkH7L7AxeUkhBabfFUy_blfkPyOC50gcZDx9_IQUvcbarD2of-D9i/pub?gid=1612348513&single=true&output=csv";
+         const UPTIME_ASSIST_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=1612348513";
 
          // Upcoming appointments with PRI (parts-on-order) parts. Manually maintained — see note above.
-         const UPCOMING_PRI_CSV_PATH = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQI0g5m_t9ZTY_vblmMwUSQ3YvnkH7L7AxeUkhBabfFUy_blfkPyOC50gcZDx9_IQUvcbarD2of-D9i/pub?gid=970116550&single=true&output=csv";
+         const UPCOMING_PRI_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=970116550";
 
          // How often to automatically re-pull the CSV, in milliseconds.
          // 300000 = 5 minutes. Set to 0 to disable auto-refresh (manual button only).

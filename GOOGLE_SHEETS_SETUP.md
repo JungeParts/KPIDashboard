@@ -8,19 +8,31 @@ sheet can update the numbers without touching code or Git.
 ## One-time setup, per feed
 
 Each feed below is its own **sheet tab** inside a Google Sheet (one workbook
-with multiple tabs is fine — publish each tab separately).
+with multiple tabs is fine).
 
-1. Open the Google Sheet, right-click the tab for this feed.
-2. **File > Share > Publish to web**.
-3. Under **Link**, choose the specific sheet tab — not "Entire Document".
-4. In the format dropdown, choose **Comma-separated values (.csv)**.
-5. Click **Publish** and confirm. Copy the generated link — it looks like
-   `https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?gid=123&single=true&output=csv`.
-6. Paste that link into the matching `TODO` constant listed below, replacing
-   the existing `raw.githubusercontent.com/...` value, then commit.
+Do **not** use File > Share > Publish to web here — its CSV export
+(`/pub?output=csv`) works fine when you open the link directly in a
+browser, but Google's anti-abuse layer blocks the cross-origin `fetch()`
+the dashboard needs, redirecting it to a sign-in wall instead. Use the
+Visualization API CSV export instead, which is the standard technique for
+reading a public Sheet from client-side JS and does support cross-origin
+`fetch()`:
 
-**Google caches published CSVs for a few minutes**, so a sheet edit can take
-up to ~5 minutes to show up on the dashboard even though the page itself
+1. Click **Share** (top right) and set **General access** to
+   **Anyone with the link** → **Viewer**.
+2. Get the spreadsheet ID from the address bar while the sheet is open:
+   `https://docs.google.com/spreadsheets/d/`**`SPREADSHEET_ID`**`/edit#gid=...`
+3. Get the tab's `gid` from the same URL (the number after `gid=`) —
+   switch to the tab first if you're not sure which one it is.
+4. Build the feed URL as:
+   `https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/gviz/tq?tqx=out:csv&gid=GID`
+5. Paste that URL into the matching constant listed below, then commit.
+
+The spreadsheet ID is the same for every tab in one workbook — only `gid`
+changes between feeds.
+
+**Google caches this endpoint for a few minutes**, so a sheet edit can take
+a little while to show up on the dashboard even though the page itself
 re-fetches every 5 minutes (`REFRESH_INTERVAL_MS`) or on demand via the
 "Refresh KPI Data" button.
 
