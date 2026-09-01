@@ -211,7 +211,7 @@
             <div class="toprow">
                <div>
                   <h1>Service Department Dashboard</h1>
-                  <p>Work In Process • Aged Service ROs</p>
+                  <p>Work In Process • Aged Service ROs • Backordered Parts • Uptime Assist • Upcoming PRI Appointments</p>
                </div>
                <div class="stamp">
                   Reporting date: <strong id="date">Today</strong><br />Updated:
@@ -277,6 +277,95 @@
                </div>
             </div>
          </section>
+         <section class="section">
+            <h2>Backordered Parts ROs</h2>
+            <p class="note">Updated via CSV upload.</p>
+            <div class="panel">
+               <div class="metrics" style="margin-bottom: 14px">
+                  <div class="metric">
+                     <span>ROs with backordered parts</span
+                     ><strong class="warn" id="backorderedPartsCount">—</strong>
+                  </div>
+               </div>
+               <div style="overflow-x: auto">
+                  <table>
+                     <thead>
+                        <tr>
+                           <th>RO</th>
+                           <th>Part #</th>
+                           <th>Description</th>
+                           <th>Status</th>
+                           <th>ETA</th>
+                        </tr>
+                     </thead>
+                     <tbody id="backorderedPartsQueue">
+                        <tr>
+                           <td colspan="5" class="muted">Loading backordered parts data…</td>
+                        </tr>
+                     </tbody>
+                  </table>
+               </div>
+            </div>
+         </section>
+         <section class="section">
+            <h2>Uptime Assist</h2>
+            <p class="note">Internal service follow-up queue. Updated via CSV upload.</p>
+            <div class="panel">
+               <div class="metrics" style="margin-bottom: 14px">
+                  <div class="metric">
+                     <span>Open follow-ups</span
+                     ><strong class="warn" id="uptimeAssistCount">—</strong>
+                  </div>
+               </div>
+               <div style="overflow-x: auto">
+                  <table>
+                     <thead>
+                        <tr>
+                           <th>Customer</th>
+                           <th>Vehicle</th>
+                           <th>Reason</th>
+                           <th>Due Date</th>
+                           <th>Status</th>
+                        </tr>
+                     </thead>
+                     <tbody id="uptimeAssistQueue">
+                        <tr>
+                           <td colspan="5" class="muted">Loading Uptime Assist data…</td>
+                        </tr>
+                     </tbody>
+                  </table>
+               </div>
+            </div>
+         </section>
+         <section class="section">
+            <h2>Upcoming Appointments with PRI Parts</h2>
+            <p class="note">Updated via CSV upload.</p>
+            <div class="panel">
+               <div class="metrics" style="margin-bottom: 14px">
+                  <div class="metric">
+                     <span>Upcoming appointments</span
+                     ><strong class="warn" id="upcomingPriCount">—</strong>
+                  </div>
+               </div>
+               <div style="overflow-x: auto">
+                  <table>
+                     <thead>
+                        <tr>
+                           <th>Appt Date</th>
+                           <th>Customer</th>
+                           <th>Part #</th>
+                           <th>Status</th>
+                        </tr>
+                     </thead>
+                     <tbody id="upcomingPriQueue">
+                        <tr>
+                           <td colspan="4" class="muted">Loading upcoming appointments…</td>
+                        </tr>
+                     </tbody>
+                  </table>
+               </div>
+            </div>
+         </section>
          <footer class="footer">
             Created by Sam Glidewell - Junge Automotive Group 2026 ·
             <a href="index.html">Parts Dashboard</a> ·
@@ -298,6 +387,15 @@
 
          // ROs at or above this age (in days) show up in the aged RO queue.
          const AGED_RO_THRESHOLD_DAYS = 30;
+
+         // ROs with parts on backorder. Uploaded manually as a CSV snapshot.
+         const BACKORDERED_PARTS_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/BackorderedPartsROs.csv";
+
+         // Internal service follow-up queue. Uploaded manually as a CSV snapshot.
+         const UPTIME_ASSIST_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/UptimeAssist.csv";
+
+         // Upcoming appointments with PRI (parts-on-order) parts. Uploaded manually as a CSV snapshot.
+         const UPCOMING_PRI_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/UpcomingApptsPRIParts.csv";
 
          // How often to automatically re-pull the CSV, in milliseconds.
          // 300000 = 5 minutes. Set to 0 to disable auto-refresh (manual button only).
@@ -606,11 +704,132 @@
          }
 
          // ==========================================
+         // GENERIC CSV-BACKED LISTS
+         // (Backordered Parts ROs, Uptime Assist, Upcoming PRI Appointments)
+         // ==========================================
+
+         /**
+          * Renders `records` straight into a table body, one row per record,
+          * with no filtering or sorting — these lists are curated in the
+          * uploaded CSV itself.
+          */
+         function renderRecordTable(tbodyId, records, columns, emptyMessage) {
+            const tbody = document.getElementById(tbodyId);
+            if (!tbody) {
+               return;
+            }
+
+            if (!records.length) {
+               tbody.innerHTML = `<tr><td colspan="${columns.length}" class="muted">${emptyMessage}</td></tr>`;
+               return;
+            }
+
+            tbody.innerHTML = records
+               .map((record) => {
+                  const cells = columns
+                     .map((column) => `<td>${escapeHtml(getFieldValue(record, column.fields))}</td>`)
+                     .join("");
+                  return `<tr>${cells}</tr>`;
+               })
+               .join("");
+         }
+
+         async function loadCsvList(path, tbodyId, columns, emptyMessage, countId) {
+            const tbody = document.getElementById(tbodyId);
+
+            try {
+               const response = await fetch(`${path}?t=${Date.now()}`, { cache: "no-store" });
+
+               if (!response.ok) {
+                  throw new Error(`Unable to load CSV (${response.status})`);
+               }
+
+               const csvText = await response.text();
+               const records = parseCsv(csvText);
+
+               if (countId) {
+                  setValue(countId, String(records.length));
+               }
+
+               renderRecordTable(tbodyId, records, columns, emptyMessage);
+            } catch (error) {
+               console.error("CSV Load Error:", path, error);
+
+               if (countId) {
+                  setValue(countId, "—");
+               }
+
+               if (tbody) {
+                  tbody.innerHTML = `<tr><td colspan="${columns.length}" class="muted">Unable to load data.</td></tr>`;
+               }
+            }
+         }
+
+         const BACKORDERED_PARTS_COLUMNS = [
+            { fields: ["RO", "RO Number", "RONumber"] },
+            { fields: ["Part Number", "PartNumber", "Part #"] },
+            { fields: ["Description"] },
+            { fields: ["Status"] },
+            { fields: ["ETA", "Backorder ETA", "Expected"] },
+         ];
+
+         const UPTIME_ASSIST_COLUMNS = [
+            { fields: ["Customer"] },
+            { fields: ["Vehicle"] },
+            { fields: ["Reason"] },
+            { fields: ["Due Date", "DueDate"] },
+            { fields: ["Status"] },
+         ];
+
+         const UPCOMING_PRI_COLUMNS = [
+            { fields: ["Appt Date", "Appointment Date", "ApptDate"] },
+            { fields: ["Customer"] },
+            { fields: ["Part Number", "PartNumber", "Part #"] },
+            { fields: ["Status"] },
+         ];
+
+         function loadBackorderedPartsCsv() {
+            return loadCsvList(
+               BACKORDERED_PARTS_CSV_PATH,
+               "backorderedPartsQueue",
+               BACKORDERED_PARTS_COLUMNS,
+               "No ROs currently have backordered parts.",
+               "backorderedPartsCount",
+            );
+         }
+
+         function loadUptimeAssistCsv() {
+            return loadCsvList(
+               UPTIME_ASSIST_CSV_PATH,
+               "uptimeAssistQueue",
+               UPTIME_ASSIST_COLUMNS,
+               "No open Uptime Assist follow-ups.",
+               "uptimeAssistCount",
+            );
+         }
+
+         function loadUpcomingPriCsv() {
+            return loadCsvList(
+               UPCOMING_PRI_CSV_PATH,
+               "upcomingPriQueue",
+               UPCOMING_PRI_COLUMNS,
+               "No upcoming appointments with PRI parts.",
+               "upcomingPriCount",
+            );
+         }
+
+         // ==========================================
          // STARTUP
          // ==========================================
 
          async function refreshAllData() {
-            await Promise.all([loadKpiCsv(), loadAgedRoCsv()]);
+            await Promise.all([
+               loadKpiCsv(),
+               loadAgedRoCsv(),
+               loadBackorderedPartsCsv(),
+               loadUptimeAssistCsv(),
+               loadUpcomingPriCsv(),
+            ]);
          }
 
          window.addEventListener("load", function () {
