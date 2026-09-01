@@ -294,8 +294,9 @@
                </select></label
             ><label
                >Department
-               <select>
-                  <option>Parts</option>
+               <select id="departmentSelect">
+                  <option value="index.html" selected>Parts</option>
+                  <option value="service-department.html">Service</option>
                </select></label
             ><button onclick="refreshAllData()">
    Refresh KPI Data
@@ -339,11 +340,6 @@
                <div class="card">
                   <div class="label">Obsolescence</div>
                   <div class="value" id="Obsolescence">6.7%</div>
-                  <div class="detail good"></div>
-               </div>
-               <div class="card">
-                  <div class="label">Work In Process</div>
-                  <div class="value" id="WorkInProcess"></div>
                   <div class="detail good"></div>
                </div>
                <div class="card">
@@ -469,39 +465,6 @@
             </div>
          </section>
          <section class="section">
-            <h2>Aged Service ROs</h2>
-            <p class="note">
-            </p>
-            <div class="panel">
-               <h3>Open 30+ days</h3>
-               <p class="sub">Sorted oldest first.</p>
-               <div class="metrics" style="margin-bottom: 14px">
-                  <div class="metric">
-                     <span>ROs open 30+ days</span
-                     ><strong class="warn" id="agedRoCount">—</strong>
-                  </div>
-               </div>
-               <div style="overflow-x: auto">
-                  <table>
-                     <thead>
-                        <tr>
-                           <th>RO</th>
-                           <th>Age</th>
-                           <th>Status</th>
-                           <th>Description</th>
-                           <th>Sale</th>
-                        </tr>
-                     </thead>
-                     <tbody id="agedRoQueue">
-                        <tr>
-                           <td colspan="5" class="muted">Loading aged RO data…</td>
-                        </tr>
-                     </tbody>
-                  </table>
-               </div>
-            </div>
-         </section>
-         <section class="section">
             <h2>Daily Scorecard</h2>
             <table id="scorecardTable">
                <thead>
@@ -548,6 +511,7 @@
          </section>
          <footer class="footer">
             Created by Sam Glidewell - Junge Automotive Group 2026 ·
+            <a href="service-department.html">Service Department</a> ·
             <a href="part-returns.html">Part Return Claims</a>
          </footer>
       </div>
@@ -565,16 +529,20 @@
          // they're updated on a different cadence than the daily KPI feed.
          const AGING_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/InventoryAging.csv";
 
-         // Service RO aging feed. Flexible headers supported: RO, Open
-         // Date, Age Days, Status, Description, Sale.
-         const AGED_RO_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/AgedServiceROs.csv";
-
-         // ROs at or above this age (in days) show up in the aged RO queue.
-         const AGED_RO_THRESHOLD_DAYS = 30;
-
          // How often to automatically re-pull the CSV, in milliseconds.
          // 300000 = 5 minutes. Set to 0 to disable auto-refresh (manual button only).
          const REFRESH_INTERVAL_MS = 300000;
+
+         // ==========================================
+         // NAVIGATION
+         // ==========================================
+
+         document.getElementById("departmentSelect").addEventListener("change", function (event) {
+            const target = event.target.value;
+            if (target) {
+               window.location.href = target;
+            }
+         });
 
          // ==========================================
          // KPI MAPPING
@@ -695,11 +663,6 @@
    setValue(
       "Obsolescence",
       `${kpi.Obsolescence}%`
-   );
-
-   setValue(
-      "WorkInProcess",
-      currency(kpi.WorkInProcess)
    );
 
    setValue(
@@ -1043,115 +1006,11 @@ async function loadKpiCsv() {
          }
 
          // ==========================================
-         // AGED SERVICE ROs (30+ days)
-         // ==========================================
-
-         function escapeHtml(value) {
-            return String(value || "")
-               .replace(/&/g, "&amp;")
-               .replace(/</g, "&lt;")
-               .replace(/>/g, "&gt;");
-         }
-
-         /**
-          * Age in days for a single RO record. Prefers an explicit Age Days
-          * column; falls back to calculating from Open Date.
-          */
-         function getRoAgeDays(record) {
-            const ageDaysValue = getFieldValue(record, ["Age Days", "AgeDays", "Age"]);
-            if (ageDaysValue !== "") {
-               return parseNumber(ageDaysValue);
-            }
-
-            const openDateValue = getFieldValue(record, ["Open Date", "OpenDate"]);
-            if (!openDateValue) {
-               return 0;
-            }
-
-            const openDate = new Date(openDateValue);
-            if (Number.isNaN(openDate.getTime())) {
-               return 0;
-            }
-
-            const msPerDay = 24 * 60 * 60 * 1000;
-            return Math.floor((Date.now() - openDate.getTime()) / msPerDay);
-         }
-
-         function renderAgedRoQueue(records) {
-            const tbody = document.getElementById("agedRoQueue");
-            if (!tbody) {
-               return;
-            }
-
-            const agedRows = records
-               .map((record) => ({ record, age: getRoAgeDays(record) }))
-               .filter((row) => row.age >= AGED_RO_THRESHOLD_DAYS)
-               .sort((a, b) => b.age - a.age);
-
-            setValue("agedRoCount", String(agedRows.length));
-
-            if (!agedRows.length) {
-               tbody.innerHTML =
-                  '<tr><td colspan="5" class="muted">No ROs currently open 30+ days.</td></tr>';
-               return;
-            }
-
-            tbody.innerHTML = agedRows
-               .map(({ record, age }) => {
-                  const ro = getFieldValue(record, ["RO", "RO Number", "RONumber"]);
-                  const status = getFieldValue(record, ["Status"]);
-                  const description =
-                     getFieldValue(record, ["Description", "Part Description"]) ||
-                     getFieldValue(record, ["Part Number", "PartNumber"]);
-                  const sale = parseNumber(getFieldValue(record, ["Sale", "Sale Amount"]));
-
-                  return `<tr>
-                     <td>${escapeHtml(ro)}</td>
-                     <td>${age}d</td>
-                     <td>${escapeHtml(status)}</td>
-                     <td>${escapeHtml(description)}</td>
-                     <td class="num">${currency(sale)}</td>
-                  </tr>`;
-               })
-               .join("");
-         }
-
-         async function loadAgedRoCsv() {
-            const tbody = document.getElementById("agedRoQueue");
-
-            try {
-               const response = await fetch(
-                  `${AGED_RO_CSV_PATH}?t=${Date.now()}`,
-                  { cache: "no-store" },
-               );
-
-               if (!response.ok) {
-                  throw new Error(
-                     `Unable to load aged RO CSV (${response.status})`,
-                  );
-               }
-
-               const csvText = await response.text();
-               const records = parseCsv(csvText);
-
-               renderAgedRoQueue(records);
-            } catch (error) {
-               console.error("Aged RO CSV Load Error:", error);
-
-               setValue("agedRoCount", "—");
-               if (tbody) {
-                  tbody.innerHTML =
-                     '<tr><td colspan="5" class="muted">Unable to load aged RO data.</td></tr>';
-               }
-            }
-         }
-
-         // ==========================================
          // STARTUP
          // ==========================================
 
          async function refreshAllData() {
-            await Promise.all([loadKpiCsv(), loadAgingCsv(), loadAgedRoCsv()]);
+            await Promise.all([loadKpiCsv(), loadAgingCsv()]);
          }
 
          // Initialize dashboard once the page finishes loading.
