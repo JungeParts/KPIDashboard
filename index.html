@@ -520,13 +520,19 @@
          // ==========================================
          // CONFIG
          // ==========================================
-         // Pulls from the GitHub relay that Power Automate pushes the
-         // OneDrive/SharePoint CSV to (raw.githubusercontent.com allows
-         // cross-origin fetch, which SharePoint/OneDrive does not).
+         // Main KPI feed. Point this at a Google Sheet published to the
+         // web as CSV (File > Share > Publish to web > pick the sheet
+         // tab > Comma-separated values) so the cards can be updated by
+         // editing the sheet directly — no GitHub commit required. See
+         // GOOGLE_SHEETS_SETUP.md for the exact column headers and steps.
+         // TODO: replace with your published Google Sheets CSV link.
+         // Falls back to the GitHub CSV snapshot until then.
          const CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/DealerTrackKPIs.csv";
 
-         // Inventory aging-by-value buckets, kept in their own file since
-         // they're updated on a different cadence than the daily KPI feed.
+         // Inventory aging-by-value buckets, kept as their own sheet/tab
+         // since they're updated on a different cadence than the daily
+         // KPI feed. Same Google Sheets publish-to-web setup as above.
+         // TODO: replace with your published Google Sheets CSV link.
          const AGING_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/InventoryAging.csv";
 
          // How often to automatically re-pull the CSV, in milliseconds.
@@ -638,77 +644,77 @@
 
    setValue(
       "DemandFillRate",
-      `${kpi.DemandFillRate}%`
+      `${getFieldValue(kpi, ["DemandFillRate", "Demand Fill Rate", "Shelf Fill Rate"])}%`
    );
 
    setValue(
       "GrossProfitPercent",
-      `${kpi.GrossProfitPercent}%`
+      `${getFieldValue(kpi, ["GrossProfitPercent", "Gross Profit Percent", "Gross Profit %"])}%`
    );
 
    setValue(
       "LostSales",
-      currency(kpi.LostSales)
+      currency(getFieldValue(kpi, ["LostSales", "Lost Sales"]))
    );
 
    setValue(
       "BackorderLines",
-      kpi.BackorderLines
+      getFieldValue(kpi, ["BackorderLines", "Backorder Lines"])
    );
 
    setValue(
       "InventoryOnHand",
-      currency(kpi.InventoryOnHand)
+      currency(getFieldValue(kpi, ["InventoryOnHand", "Inventory On Hand", "Inventory On-Hand"]))
    );
 
    setValue(
       "Obsolescence",
-      `${kpi.Obsolescence}%`
+      `${getFieldValue(kpi, ["Obsolescence"])}%`
    );
 
    setValue(
       "ExcessInventory",
-      `${kpi.ExcessInventory}%`
+      `${getFieldValue(kpi, ["ExcessInventory", "Excess Inventory"])}%`
    );
 
    setValue(
       "PartsSalesToday",
-      currency(kpi.PartsSalesToday)
+      currency(getFieldValue(kpi, ["PartsSalesToday", "Parts Sales Today", "Parts Sales"]))
    );
 
    setValue(
       "GrossProfitToday",
-      currency(kpi.GrossProfitToday)
+      currency(getFieldValue(kpi, ["GrossProfitToday", "Gross Profit Today"]))
    );
 
    setValue(
       "OverrideLines",
-      kpi.OverrideLines
+      getFieldValue(kpi, ["OverrideLines", "Override Lines"])
    );
 
    setValue(
       "OverrideGPImpact",
-      currency(kpi.OverrideGPImpact)
+      currency(getFieldValue(kpi, ["OverrideGPImpact", "Override GP Impact"]))
    );
 
    setValue(
       "UnrealizedSales",
-      currency(kpi.UnrealizedSales)
+      currency(getFieldValue(kpi, ["UnrealizedSales", "Unrealized Sales"]))
    );
 
    setValue(
       "UnrealizedGP",
-      currency(kpi.UnrealizedGP)
+      currency(getFieldValue(kpi, ["UnrealizedGP", "Unrealized GP"]))
    );
 
    setValue(
       "InternalSales",
-      currency(kpi.InternalSales)
+      currency(getFieldValue(kpi, ["InternalSales", "Internal Sales"]))
    );
 
    setValue(
       "SalesByEP",
-      kpi.SalesByEP
+      getFieldValue(kpi, ["SalesByEP", "Sales By EP", "Sales by EP"])
    );
 
    syncScorecard();
@@ -812,6 +818,16 @@ function syncScorecard() {
                ? ""
                : String(record[matchingKey]).trim();
          }
+
+         /**
+          * Appends a cache-busting timestamp to a feed URL, whether or not
+          * the URL already has a query string (published Google Sheets CSV
+          * links come with one, e.g. "...?gid=0&single=true&output=csv").
+          */
+         function withCacheBust(url) {
+            const separator = url.includes("?") ? "&" : "?";
+            return `${url}${separator}t=${Date.now()}`;
+         }
          // ==========================================
          // CSV FUNCTIONS
          // (YOUR EXISTING CODE BELOW)
@@ -894,7 +910,7 @@ async function loadKpiCsv() {
       // Cache-bust so the browser/proxy doesn't serve a stale copy of
       // the CSV between refreshes.
       const response = await fetch(
-         `${CSV_PATH}?t=${Date.now()}`,
+         withCacheBust(CSV_PATH),
          { cache: "no-store" }
       );
 
@@ -961,10 +977,10 @@ async function loadKpiCsv() {
 
          function mapAgingCsvData(bucket) {
             const values = {
-               Aging0to6: parseNumber(bucket.Aging0to6),
-               Aging7to12: parseNumber(bucket.Aging7to12),
-               Aging13to24: parseNumber(bucket.Aging13to24),
-               Aging25plus: parseNumber(bucket.Aging25plus),
+               Aging0to6: parseNumber(getFieldValue(bucket, ["Aging0to6", "0-6 Months", "0 to 6 Months"])),
+               Aging7to12: parseNumber(getFieldValue(bucket, ["Aging7to12", "7-12 Months", "7 to 12 Months"])),
+               Aging13to24: parseNumber(getFieldValue(bucket, ["Aging13to24", "13-24 Months", "13 to 24 Months"])),
+               Aging25plus: parseNumber(getFieldValue(bucket, ["Aging25plus", "25+ Months", "25 Plus Months"])),
             };
 
             const total =
@@ -982,7 +998,7 @@ async function loadKpiCsv() {
          async function loadAgingCsv() {
             try {
                const response = await fetch(
-                  `${AGING_CSV_PATH}?t=${Date.now()}`,
+                  withCacheBust(AGING_CSV_PATH),
                   { cache: "no-store" },
                );
 

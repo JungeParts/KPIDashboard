@@ -378,23 +378,35 @@
          // CONFIG
          // ==========================================
          // Same DealerTrack feed the Parts dashboard uses — Work In Process
-         // lives in that CSV alongside the parts KPIs.
+         // lives in that CSV alongside the parts KPIs. Point this at a
+         // Google Sheet published to the web as CSV (File > Share >
+         // Publish to web > pick the sheet tab > Comma-separated values)
+         // so it can be updated by editing the sheet directly — no GitHub
+         // commit required. See GOOGLE_SHEETS_SETUP.md for column headers.
+         // TODO: replace with your published Google Sheets CSV link.
+         // Falls back to the GitHub CSV snapshot until then.
          const CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/DealerTrackKPIs.csv";
 
          // Service RO aging feed. Flexible headers supported: RO, Open
          // Date, Age Days, Status, Description, Sale.
+         // TODO: replace with your published Google Sheets CSV link.
          const AGED_RO_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/AgedServiceROs.csv";
 
          // ROs at or above this age (in days) show up in the aged RO queue.
          const AGED_RO_THRESHOLD_DAYS = 30;
 
-         // ROs with parts on backorder. Uploaded manually as a CSV snapshot.
+         // ROs with parts on backorder. Manually maintained — a Google
+         // Sheets tab, updated by editing rows, replaces the old
+         // upload-a-CSV-file-to-GitHub workflow.
+         // TODO: replace with your published Google Sheets CSV link.
          const BACKORDERED_PARTS_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/BackorderedPartsROs.csv";
 
-         // Internal service follow-up queue. Uploaded manually as a CSV snapshot.
+         // Internal service follow-up queue. Manually maintained — see note above.
+         // TODO: replace with your published Google Sheets CSV link.
          const UPTIME_ASSIST_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/UptimeAssist.csv";
 
-         // Upcoming appointments with PRI (parts-on-order) parts. Uploaded manually as a CSV snapshot.
+         // Upcoming appointments with PRI (parts-on-order) parts. Manually maintained — see note above.
+         // TODO: replace with your published Google Sheets CSV link.
          const UPCOMING_PRI_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/UpcomingApptsPRIParts.csv";
 
          // How often to automatically re-pull the CSV, in milliseconds.
@@ -467,7 +479,7 @@
          }
 
          function mapCsvKpiData(kpi) {
-            setValue("WorkInProcess", currency(kpi.WorkInProcess));
+            setValue("WorkInProcess", currency(getFieldValue(kpi, ["WorkInProcess", "Work In Process"])));
          }
 
          // ==========================================
@@ -494,6 +506,16 @@
             return matchingKey === undefined
                ? ""
                : String(record[matchingKey]).trim();
+         }
+
+         /**
+          * Appends a cache-busting timestamp to a feed URL, whether or not
+          * the URL already has a query string (published Google Sheets CSV
+          * links come with one, e.g. "...?gid=0&single=true&output=csv").
+          */
+         function withCacheBust(url) {
+            const separator = url.includes("?") ? "&" : "?";
+            return `${url}${separator}t=${Date.now()}`;
          }
 
          // ==========================================
@@ -574,7 +596,7 @@
          async function loadKpiCsv() {
             try {
                const response = await fetch(
-                  `${CSV_PATH}?t=${Date.now()}`,
+                  withCacheBust(CSV_PATH),
                   { cache: "no-store" },
                );
 
@@ -678,7 +700,7 @@
 
             try {
                const response = await fetch(
-                  `${AGED_RO_CSV_PATH}?t=${Date.now()}`,
+                  withCacheBust(AGED_RO_CSV_PATH),
                   { cache: "no-store" },
                );
 
@@ -738,7 +760,7 @@
             const tbody = document.getElementById(tbodyId);
 
             try {
-               const response = await fetch(`${path}?t=${Date.now()}`, { cache: "no-store" });
+               const response = await fetch(withCacheBust(path), { cache: "no-store" });
 
                if (!response.ok) {
                   throw new Error(`Unable to load CSV (${response.status})`);
