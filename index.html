@@ -525,7 +525,7 @@
          // tab > Comma-separated values) so the cards can be updated by
          // editing the sheet directly — no GitHub commit required. See
          // GOOGLE_SHEETS_SETUP.md for the exact column headers and steps.
-         const CSV_PATH = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQI0g5m_t9ZTY_vblmMwUSQ3YvnkH7L7AxeUkhBabfFUy_blfkPyOC50gcZDx9_IQUvcbarD2of-D9i/pub?gid=0&single=true&output=csv";
+         const CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=0";
 
          // Inventory aging-by-value buckets, kept as their own sheet/tab
          // since they're updated on a different cadence than the daily
@@ -561,10 +561,18 @@
          }
 
          function currency(value) {
-            return Number(value || 0).toLocaleString("en-US", {
+            return parseNumber(value).toLocaleString("en-US", {
                style: "currency",
                currency: "USD",
             });
+         }
+
+         // Formats a percent field for display. Handles both a raw number
+         // ("94.2") and a value a spreadsheet already rendered as text with
+         // its own "%" sign ("94.20%") — parseNumber strips non-numeric
+         // characters either way, so this never double-stamps the sign.
+         function percent(value) {
+            return `${parseNumber(value)}%`;
          }
 
          // Abbreviated currency for the aging bars, e.g. $449K, $1.2M.
@@ -642,12 +650,12 @@
 
    setValue(
       "DemandFillRate",
-      `${getFieldValue(kpi, ["DemandFillRate", "Demand Fill Rate", "Shelf Fill Rate"])}%`
+      percent(getFieldValue(kpi, ["DemandFillRate", "Demand Fill Rate", "Shelf Fill Rate"]))
    );
 
    setValue(
       "GrossProfitPercent",
-      `${getFieldValue(kpi, ["GrossProfitPercent", "Gross Profit Percent", "Gross Profit %"])}%`
+      percent(getFieldValue(kpi, ["GrossProfitPercent", "Gross Profit Percent", "Gross Profit %"]))
    );
 
    setValue(
@@ -667,12 +675,12 @@
 
    setValue(
       "Obsolescence",
-      `${getFieldValue(kpi, ["Obsolescence"])}%`
+      percent(getFieldValue(kpi, ["Obsolescence"]))
    );
 
    setValue(
       "ExcessInventory",
-      `${getFieldValue(kpi, ["ExcessInventory", "Excess Inventory"])}%`
+      percent(getFieldValue(kpi, ["ExcessInventory", "Excess Inventory"]))
    );
 
    setValue(

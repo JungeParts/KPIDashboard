@@ -8,21 +8,46 @@ sheet can update the numbers without touching code or Git.
 ## One-time setup, per feed
 
 Each feed below is its own **sheet tab** inside a Google Sheet (one workbook
-with multiple tabs is fine — publish each tab separately).
+with multiple tabs is fine).
 
-1. Open the Google Sheet, right-click the tab for this feed.
-2. **File > Share > Publish to web**.
-3. Under **Link**, choose the specific sheet tab — not "Entire Document".
-4. In the format dropdown, choose **Comma-separated values (.csv)**.
-5. Click **Publish** and confirm. Copy the generated link — it looks like
-   `https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?gid=123&single=true&output=csv`.
-6. Paste that link into the matching `TODO` constant listed below, replacing
-   the existing `raw.githubusercontent.com/...` value, then commit.
+Do **not** use File > Share > Publish to web here — its CSV export
+(`/pub?output=csv`) works fine when you open the link directly in a
+browser, but Google's anti-abuse layer blocks the cross-origin `fetch()`
+the dashboard needs, redirecting it to a sign-in wall instead. Use the
+Visualization API CSV export instead, which is the standard technique for
+reading a public Sheet from client-side JS and does support cross-origin
+`fetch()`:
 
-**Google caches published CSVs for a few minutes**, so a sheet edit can take
-up to ~5 minutes to show up on the dashboard even though the page itself
+1. Click **Share** (top right) and set **General access** to
+   **Anyone with the link** → **Viewer**.
+2. Get the spreadsheet ID from the address bar while the sheet is open:
+   `https://docs.google.com/spreadsheets/d/`**`SPREADSHEET_ID`**`/edit#gid=...`
+3. Get the tab's `gid` from the same URL (the number after `gid=`) —
+   switch to the tab first if you're not sure which one it is.
+4. Build the feed URL as:
+   `https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/gviz/tq?tqx=out:csv&gid=GID`
+5. Paste that URL into the matching constant listed below, then commit.
+
+The spreadsheet ID is the same for every tab in one workbook — only `gid`
+changes between feeds.
+
+**Google caches this endpoint for a few minutes**, so a sheet edit can take
+a little while to show up on the dashboard even though the page itself
 re-fetches every 5 minutes (`REFRESH_INTERVAL_MS`) or on demand via the
 "Refresh KPI Data" button.
+
+**Number formatting in the sheet:** if a cell is formatted as Currency or
+Percent, the published CSV contains the *displayed text* (`"$624,000.00"`,
+`"94.20%"`), not the underlying number. The dashboard code strips `$`, `,`,
+and `%` before doing math, so formatted cells work, but two things still
+trip people up:
+- A negative number shown in accounting style with parentheses, e.g.
+  `"($3,240.03)"`, loses its sign once the parentheses are stripped — it
+  will display as a positive value. Use a plain minus sign (`-3240.03`)
+  for negatives instead.
+- It's simplest to just leave KPI cells formatted as **Plain text** or
+  **Number** (no currency/percent symbol) and let the dashboard add the
+  `$`/`%` for display — one less place for the two to disagree.
 
 Row 1 of each tab must be the header row, using (or close to) the column
 names listed below — matching is case- and punctuation-insensitive, and a
