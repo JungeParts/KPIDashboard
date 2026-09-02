@@ -201,6 +201,14 @@
          td.num {
             text-align: right;
          }
+         tfoot td {
+            position: sticky;
+            bottom: 0;
+            background: #eaf2f8;
+            color: var(--n);
+            font-weight: 700;
+            border-top: 2px solid var(--l);
+         }
          .footer {
             padding: 24px 32px;
             color: var(--s);
@@ -282,7 +290,7 @@
                      ><strong class="warn" id="agedRoCount">—</strong>
                   </div>
                </div>
-               <div style="overflow-x: auto">
+               <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
                   <table>
                      <thead>
                         <tr>
@@ -298,6 +306,12 @@
                            <td colspan="5" class="muted">Loading aged RO data…</td>
                         </tr>
                      </tbody>
+                     <tfoot>
+                        <tr>
+                           <td colspan="4">Total</td>
+                           <td class="num" id="agedRoTotal">—</td>
+                        </tr>
+                     </tfoot>
                   </table>
                </div>
             </div>
@@ -691,8 +705,11 @@
             if (!agedRows.length) {
                tbody.innerHTML =
                   '<tr><td colspan="5" class="muted">No ROs currently open 30+ days.</td></tr>';
+               setValue("agedRoTotal", currency(0));
                return;
             }
+
+            let total = 0;
 
             tbody.innerHTML = agedRows
                .map(({ record, age }) => {
@@ -702,6 +719,7 @@
                      getFieldValue(record, ["Description", "Part Description"]) ||
                      getFieldValue(record, ["Part Number", "PartNumber"]);
                   const sale = parseNumber(getFieldValue(record, ["Sale", "Sale Amount"]));
+                  total += sale;
 
                   return `<tr>
                      <td>${escapeHtml(ro)}</td>
@@ -712,6 +730,8 @@
                   </tr>`;
                })
                .join("");
+
+            setValue("agedRoTotal", currency(total));
          }
 
          async function loadAgedRoCsv() {
@@ -737,6 +757,7 @@
                console.error("Aged RO CSV Load Error:", error);
 
                setValue("agedRoCount", "—");
+               setValue("agedRoTotal", "—");
                if (tbody) {
                   tbody.innerHTML =
                      '<tr><td colspan="5" class="muted">Unable to load aged RO data.</td></tr>';
