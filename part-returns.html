@@ -149,6 +149,30 @@
             color: #fff;
             font-weight: 700;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+         }
+         button.loading {
+            cursor: default;
+            opacity: 0.8;
+         }
+         .btn-spinner {
+            display: none;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.45);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+         }
+         button.loading .btn-spinner {
+            display: inline-block;
+         }
+         @keyframes spin {
+            to {
+               transform: rotate(360deg);
+            }
          }
          input[type="password"] {
             padding: 10px;
@@ -260,10 +284,12 @@
                      </table>
                   </div>
                   <button
+                     id="refreshClaimsBtn"
                      onclick="loadClaims()"
                      style="margin-top: 14px"
                   >
-                     Refresh Claims Data
+                     <span class="btn-spinner" aria-hidden="true"></span>
+                     <span>Refresh Claims Data</span>
                   </button>
                </div>
             </section>
@@ -507,6 +533,12 @@
 
          async function loadClaims() {
             const tbody = document.getElementById("claimsTable");
+            const btn = document.getElementById("refreshClaimsBtn");
+
+            if (btn) {
+               btn.disabled = true;
+               btn.classList.add("loading");
+            }
 
             try {
                const response = await fetch(
@@ -529,6 +561,11 @@
                if (tbody) {
                   tbody.innerHTML =
                      '<tr><td colspan="6" class="muted">Unable to load claims data.</td></tr>';
+               }
+            } finally {
+               if (btn) {
+                  btn.disabled = false;
+                  btn.classList.remove("loading");
                }
             }
          }
