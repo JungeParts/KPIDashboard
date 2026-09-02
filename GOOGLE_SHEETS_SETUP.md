@@ -149,11 +149,78 @@ One row per backordered part. Every row shown as-is, no filtering.
 | `Part Number` (Part #) |
 | `Status` |
 
+### Trend history — `TREND_CSV_PATH` (`trend-analysis.html` only)
+
+This feed works differently from every other one on this page: instead of
+one row that gets **overwritten** each time the numbers change, this tab
+gets a **new row appended every day**, so the dashboard can chart how each
+number moves over time. Row 1 is still the header row.
+
+| Column | Notes |
+|---|---|
+| `Date` | any format `new Date()` can parse, e.g. `2026-09-02` |
+| `DemandFillRate` (Demand Fill Rate, Shelf Fill Rate) | number, no `%` |
+| `GrossProfitPercent` (Gross Profit Percent, Gross Profit %) | number, no `%` |
+| `LostSales` (Lost Sales) | dollars |
+| `InventoryOnHand` (Inventory On Hand) | dollars |
+| `ExcessInventory` (Excess Inventory) | number, no `%` |
+| `MonthsSupply` (Months Supply, Months Supply On Hand) | number |
+| `PartsSalesToday` (Parts Sales Today, Parts Sales) | dollars |
+| `Aging6to11` (6-11 Months) | dollars |
+| `Aging12plus` (12+ Months) | dollars |
+
+Set it up the same way as every other feed (see steps 1-5 above), then paste
+the CSV URL into `TREND_CSV_PATH` in `trend-analysis.html`.
+
+**Adding a row every day.** The simplest approach: once a day, copy that
+day's values from the main `KPI` tab and the `InventoryAgingbyValue` tab
+into a new row at the bottom of the history tab. To automate it instead,
+open **Extensions → Apps Script** on the spreadsheet, paste this in, then
+add a time-driven trigger (Triggers ⏱ → Add Trigger → `snapshotDailyHistory`
+→ Day timer → whatever time your numbers are finalized, e.g. 6pm):
+
+```javascript
+function snapshotDailyHistory() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const kpi = ss.getSheetByName("KPI"); // main KPI tab (CSV_PATH, gid=0)
+  const aging = ss.getSheetByName("InventoryAgingbyValue");
+  const history = ss.getSheetByName("History");
+
+  // Row 2 holds the current values on both source tabs (row 1 is headers).
+  const kpiHeaders = kpi.getRange(1, 1, 1, kpi.getLastColumn()).getValues()[0];
+  const kpiValues = kpi.getRange(2, 1, 1, kpi.getLastColumn()).getValues()[0];
+  const agingHeaders = aging.getRange(1, 1, 1, aging.getLastColumn()).getValues()[0];
+  const agingValues = aging.getRange(2, 1, 1, aging.getLastColumn()).getValues()[0];
+
+  function find(headers, values, name) {
+    const index = headers.indexOf(name);
+    return index === -1 ? "" : values[index];
+  }
+
+  history.appendRow([
+    Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd"),
+    find(kpiHeaders, kpiValues, "DemandFillRate"),
+    find(kpiHeaders, kpiValues, "GrossProfitPercent"),
+    find(kpiHeaders, kpiValues, "LostSales"),
+    find(kpiHeaders, kpiValues, "InventoryOnHand"),
+    find(kpiHeaders, kpiValues, "ExcessInventory"),
+    find(kpiHeaders, kpiValues, "MonthsSupply"),
+    find(kpiHeaders, kpiValues, "PartsSalesToday"),
+    find(agingHeaders, agingValues, "Aging6to11"),
+    find(agingHeaders, agingValues, "Aging12plus"),
+  ]);
+}
+```
+
+Adjust the sheet/tab names and column names in the script to match yours —
+this is a starting point, not a drop-in fit for every spreadsheet layout.
+
 ## Where the URLs live in code
 
 - `index.html`: `CSV_PATH`, `AGING_CSV_PATH`, `OPEN_POS_CSV_PATH` (in the `CONFIG` section of the `<script>`)
 - `service-department.html`: `CSV_PATH`, `AGED_RO_CSV_PATH`, `BACKORDERED_PARTS_CSV_PATH`,
   `UPTIME_ASSIST_CSV_PATH`, `UPCOMING_PRI_CSV_PATH` (same `CONFIG` section)
+- `trend-analysis.html`: `TREND_CSV_PATH` (same `CONFIG` section)
 
 Until each constant is swapped to a published Google Sheets link, it keeps
 pointing at the existing GitHub CSV snapshot, so the dashboard keeps
