@@ -85,6 +85,30 @@
             color: #fff;
             font-weight: 700;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+         }
+         button.loading {
+            cursor: default;
+            opacity: 0.8;
+         }
+         .btn-spinner {
+            display: none;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.45);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+         }
+         button.loading .btn-spinner {
+            display: inline-block;
+         }
+         @keyframes spin {
+            to {
+               transform: rotate(360deg);
+            }
          }
          .section {
             padding: 24px 32px 0;
@@ -298,8 +322,9 @@
                   <option value="index.html" selected>Parts</option>
                   <option value="service-department.html">Service</option>
                </select></label
-            ><button onclick="refreshAllData()">
-   Refresh KPI Data
+            ><button id="refreshBtn" onclick="refreshAllData()">
+   <span class="btn-spinner" aria-hidden="true"></span>
+   <span>Refresh KPI Data</span>
 </button>
          </div>
          <section class="section">
@@ -1043,7 +1068,20 @@ async function loadKpiCsv() {
          // ==========================================
 
          async function refreshAllData() {
-            await Promise.all([loadKpiCsv(), loadAgingCsv()]);
+            const btn = document.getElementById("refreshBtn");
+            if (btn) {
+               btn.disabled = true;
+               btn.classList.add("loading");
+            }
+
+            try {
+               await Promise.all([loadKpiCsv(), loadAgingCsv()]);
+            } finally {
+               if (btn) {
+                  btn.disabled = false;
+                  btn.classList.remove("loading");
+               }
+            }
          }
 
          // Initialize dashboard once the page finishes loading.
