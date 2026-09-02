@@ -92,6 +92,19 @@ One data row, the current aging-by-value split:
 | `Aging13to24` (13-24 Months) | dollars |
 | `Aging25plus` (25+ Months) | dollars |
 
+### Open Purchase Orders — `OPEN_POS_CSV_PATH` (`index.html` only)
+
+One row per open PO. Every row shown as-is, no filtering.
+
+| Column |
+|---|
+| `PO` (PO Number, PO#) |
+| `Vendor` (Supplier) |
+| `Order Date` |
+| `ETA` (Expected, Expected Date) |
+| `Status` |
+| `Amount` (PO Amount, Total) — dollars |
+
 ### Aged Service ROs — `AGED_RO_CSV_PATH` (`service-department.html`)
 
 One row per open RO. Only ROs at or above 30 days old show in the queue
@@ -139,7 +152,7 @@ One row per backordered part. Every row shown as-is, no filtering.
 
 ## Where the URLs live in code
 
-- `index.html`: `CSV_PATH`, `AGING_CSV_PATH` (in the `CONFIG` section of the `<script>`)
+- `index.html`: `CSV_PATH`, `AGING_CSV_PATH`, `OPEN_POS_CSV_PATH` (in the `CONFIG` section of the `<script>`)
 - `service-department.html`: `CSV_PATH`, `AGED_RO_CSV_PATH`, `BACKORDERED_PARTS_CSV_PATH`,
   `UPTIME_ASSIST_CSV_PATH`, `UPCOMING_PRI_CSV_PATH` (same `CONFIG` section)
 
