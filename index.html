@@ -234,18 +234,27 @@
          }
          .bars {
             display: grid;
-            gap: 12px;
-            margin-top: 16px;
+            gap: 24px;
+            margin-top: 20px;
          }
          .barrow {
             display: grid;
-            grid-template-columns: 130px 1fr 65px;
             gap: 10px;
-            align-items: center;
-            font-size: 12px;
+         }
+         .barrow-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--n);
+         }
+         .barrow-label strong {
+            font-size: 20px;
+            font-weight: 800;
          }
          .track {
-            height: 12px;
+            height: 28px;
             background: var(--track);
             border-radius: 99px;
             overflow: hidden;
@@ -352,9 +361,6 @@
             }
             .grid {
                grid-template-columns: 1fr;
-            }
-            .barrow {
-               grid-template-columns: 100px 1fr 50px;
             }
          }
       </style>
@@ -473,18 +479,22 @@
                   </p>
                   <div class="bars">
                      <div class="barrow">
-                        <span>6–11 months</span>
-                        <div class="track">
-                           <div class="fill" id="fillAging7to12" style="width: 0%"></div>
+                        <div class="barrow-label">
+                           <span>6–11 months</span>
+                           <strong id="valAging6to11">—</strong>
                         </div>
-                        <strong id="valAging7to12">—</strong>
+                        <div class="track">
+                           <div class="fill a" id="fillAging6to11" style="width: 0%"></div>
+                        </div>
                      </div>
                      <div class="barrow">
-                        <span>12+ months</span>
-                        <div class="track">
-                           <div class="fill a" id="fillAging13to24" style="width: 0%"></div>
+                        <div class="barrow-label">
+                           <span>12+ months</span>
+                           <strong id="valAging12plus">—</strong>
                         </div>
-                        <strong id="valAging13to24">—</strong>
+                        <div class="track">
+                           <div class="fill r" id="fillAging12plus" style="width: 0%"></div>
+                        </div>
                      </div>
                   </div>
                </div>
@@ -678,7 +688,7 @@
          // since they're updated on a different cadence than the daily
          // KPI feed. Same Google Sheets publish-to-web setup as above.
          // TODO: replace with your published Google Sheets CSV link.
-         const AGING_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/InventoryAging.csv";
+         const AGING_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=67671052";
 
          // Open Purchase Orders list, kept as its own sheet/tab. Same
          // Google Sheets publish-to-web setup as above.
@@ -1171,22 +1181,14 @@ async function loadKpiCsv() {
 
          function mapAgingCsvData(bucket) {
             const values = {
-               Aging0to6: parseNumber(getFieldValue(bucket, ["Aging0to6", "0-6 Months", "0 to 6 Months"])),
-               Aging7to12: parseNumber(getFieldValue(bucket, ["Aging7to12", "7-12 Months", "7 to 12 Months"])),
-               Aging13to24: parseNumber(getFieldValue(bucket, ["Aging13to24", "13-24 Months", "13 to 24 Months"])),
-               Aging25plus: parseNumber(getFieldValue(bucket, ["Aging25plus", "25+ Months", "25 Plus Months"])),
+               Aging6to11: parseNumber(getFieldValue(bucket, ["Aging6to11", "6-11 Months", "6 to 11 Months"])),
+               Aging12plus: parseNumber(getFieldValue(bucket, ["Aging12plus", "12+ Months", "12 Plus Months"])),
             };
 
-            const total =
-               values.Aging0to6 +
-               values.Aging7to12 +
-               values.Aging13to24 +
-               values.Aging25plus;
+            const total = values.Aging6to11 + values.Aging12plus;
 
-            setAgingBar("Aging0to6", values.Aging0to6, total);
-            setAgingBar("Aging7to12", values.Aging7to12, total);
-            setAgingBar("Aging13to24", values.Aging13to24, total);
-            setAgingBar("Aging25plus", values.Aging25plus, total);
+            setAgingBar("Aging6to11", values.Aging6to11, total);
+            setAgingBar("Aging12plus", values.Aging12plus, total);
          }
 
          async function loadAgingCsv() {
