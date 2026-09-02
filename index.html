@@ -564,6 +564,37 @@
             </div>
          </section>
          <section class="section">
+            <h2>Open Purchase Orders</h2>
+            <p class="note">DealerTrack open PO report.</p>
+            <div class="panel">
+               <div class="metrics" style="margin-bottom: 14px">
+                  <div class="metric">
+                     <span>Open POs</span
+                     ><strong class="warn" id="openPosCount">—</strong>
+                  </div>
+               </div>
+               <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
+                  <table>
+                     <thead>
+                        <tr>
+                           <th>PO #</th>
+                           <th>Vendor</th>
+                           <th>Order Date</th>
+                           <th>ETA</th>
+                           <th>Status</th>
+                           <th>Amount</th>
+                        </tr>
+                     </thead>
+                     <tbody id="openPosQueue">
+                        <tr>
+                           <td colspan="6" class="muted">Loading open PO data…</td>
+                        </tr>
+                     </tbody>
+                  </table>
+               </div>
+            </div>
+         </section>
+         <section class="section">
             <h2>Daily Scorecard</h2>
             <table id="scorecardTable">
                <thead>
@@ -631,6 +662,10 @@
          // KPI feed. Same Google Sheets publish-to-web setup as above.
          // TODO: replace with your published Google Sheets CSV link.
          const AGING_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/InventoryAging.csv";
+
+         // Open Purchase Orders list, kept as its own sheet/tab. Same
+         // Google Sheets publish-to-web setup as above.
+         const OPEN_POS_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=548227864";
 
          // How often to automatically re-pull the CSV, in milliseconds.
          // 300000 = 5 minutes. Set to 0 to disable auto-refresh (manual button only).
@@ -1165,6 +1200,100 @@ async function loadKpiCsv() {
          }
 
          // ==========================================
+         // GENERIC CSV-BACKED LISTS
+         // (Open Purchase Orders)
+         // ==========================================
+
+         /**
+          * Renders `records` straight into a table body, one row per record,
+          * with no filtering or sorting — these lists are curated in the
+          * uploaded CSV itself. Columns may supply a `format` function
+          * (e.g. currency) and a `numeric` flag to right-align the cell.
+          */
+         function renderRecordTable(tbodyId, records, columns, emptyMessage) {
+            const tbody = document.getElementById(tbodyId);
+            if (!tbody) {
+               return;
+            }
+
+            if (!records.length) {
+               tbody.innerHTML = `<tr><td colspan="${columns.length}" class="muted">${emptyMessage}</td></tr>`;
+               return;
+            }
+
+            tbody.innerHTML = records
+               .map((record) => {
+                  const cells = columns
+                     .map((column) => {
+                        const raw = getFieldValue(record, column.fields);
+                        const value = column.format ? column.format(raw) : raw;
+                        const cls = column.numeric ? ' class="num"' : "";
+                        return `<td${cls}>${escapeHtml(value)}</td>`;
+                     })
+                     .join("");
+                  return `<tr>${cells}</tr>`;
+               })
+               .join("");
+         }
+
+         async function loadCsvList(path, tbodyId, columns, emptyMessage, countId) {
+            const tbody = document.getElementById(tbodyId);
+
+            try {
+               const response = await fetch(withCacheBust(path), { cache: "no-store" });
+
+               if (!response.ok) {
+                  throw new Error(`Unable to load CSV (${response.status})`);
+               }
+
+               const csvText = await response.text();
+               const records = parseCsv(csvText);
+
+               if (countId) {
+                  setValue(countId, String(records.length));
+               }
+
+               renderRecordTable(tbodyId, records, columns, emptyMessage);
+            } catch (error) {
+               console.error("CSV Load Error:", path, error);
+
+               if (countId) {
+                  setValue(countId, "—");
+               }
+
+               if (tbody) {
+                  tbody.innerHTML = `<tr><td colspan="${columns.length}" class="muted">Unable to load data.</td></tr>`;
+               }
+            }
+         }
+
+         function escapeHtml(value) {
+            return String(value || "")
+               .replace(/&/g, "&amp;")
+               .replace(/</g, "&lt;")
+               .replace(/>/g, "&gt;");
+         }
+
+         const OPEN_POS_COLUMNS = [
+            { fields: ["PO", "PO Number", "PO#", "PONumber"] },
+            { fields: ["Vendor", "Supplier"] },
+            { fields: ["Order Date", "OrderDate", "PO Date"] },
+            { fields: ["ETA", "Expected", "Expected Date"] },
+            { fields: ["Status"] },
+            { fields: ["Amount", "PO Amount", "Total"], format: currency, numeric: true },
+         ];
+
+         function loadOpenPosCsv() {
+            return loadCsvList(
+               OPEN_POS_CSV_PATH,
+               "openPosQueue",
+               OPEN_POS_COLUMNS,
+               "No open purchase orders.",
+               "openPosCount",
+            );
+         }
+
+         // ==========================================
          // STARTUP
          // ==========================================
 
@@ -1176,7 +1305,7 @@ async function loadKpiCsv() {
             }
 
             try {
-               await Promise.all([loadKpiCsv(), loadAgingCsv()]);
+               await Promise.all([loadKpiCsv(), loadAgingCsv(), loadOpenPosCsv()]);
             } finally {
                if (btn) {
                   btn.disabled = false;
