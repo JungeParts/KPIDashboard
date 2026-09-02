@@ -5,6 +5,18 @@
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width,initial-scale=1" />
       <title>Service Department Dashboard</title>
+      <script>
+         (function () {
+            var stored = localStorage.getItem("kpiDashboardTheme");
+            var theme =
+               stored ||
+               (window.matchMedia &&
+               window.matchMedia("(prefers-color-scheme: dark)").matches
+                  ? "dark"
+                  : "light");
+            document.documentElement.setAttribute("data-theme", theme);
+         })();
+      </script>
       <style>
          :root {
             --n: #102a43;
@@ -15,6 +27,24 @@
             --s: #52616b;
             --bg: #f3f6f9;
             --l: #dce4ea;
+            --text: #172b3a;
+            --surface: #fff;
+            --surface-alt: #eaf2f8;
+            --border: #edf1f4;
+         }
+         :root[data-theme="dark"] {
+            --n: #e7edf5;
+            --b: #4da3e6;
+            --g: #3ddc84;
+            --a: #e2a640;
+            --r: #ff6b6b;
+            --s: #a7b6c2;
+            --bg: #0f1720;
+            --l: #2a3744;
+            --text: #dde6ee;
+            --surface: #17212b;
+            --surface-alt: #1d2a36;
+            --border: #26333f;
          }
          * {
             box-sizing: border-box;
@@ -22,18 +52,21 @@
          body {
             margin: 0;
             background: var(--bg);
-            color: #172b3a;
+            color: var(--text);
             font:
                14px Segoe UI,
                Arial,
                sans-serif;
+            transition:
+               background-color 0.2s ease,
+               color 0.2s ease;
          }
          .shell {
             max-width: 1500px;
             margin: auto;
          }
          .top {
-            background: linear-gradient(120deg, var(--n), #1a5b91);
+            background: linear-gradient(120deg, #102a43, #1a5b91);
             color: #fff;
             padding: 26px 32px;
          }
@@ -58,8 +91,24 @@
             border-radius: 8px;
             font-size: 12px;
          }
+         .theme-toggle {
+            background: #ffffff1d;
+            border: 1px solid #ffffff36;
+            color: #fff;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 16px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+         }
+         .theme-toggle:hover {
+            background: #ffffff33;
+         }
          .filters {
-            background: #fff;
+            background: var(--surface);
             padding: 14px 32px;
             border-bottom: 1px solid var(--l);
             display: flex;
@@ -76,7 +125,8 @@
             padding: 8px;
             border: 1px solid var(--l);
             border-radius: 6px;
-            background: #fff;
+            background: var(--surface);
+            color: var(--text);
          }
          button {
             background: var(--b);
@@ -130,7 +180,7 @@
          }
          .card,
          .panel {
-            background: #fff;
+            background: var(--surface);
             border: 1px solid var(--l);
             border-radius: 10px;
             padding: 17px;
@@ -174,7 +224,7 @@
          .metric {
             display: flex;
             justify-content: space-between;
-            border-bottom: 1px solid #edf1f4;
+            border-bottom: 1px solid var(--border);
             padding: 9px 0;
          }
          .metric:last-child {
@@ -183,11 +233,11 @@
          table {
             width: 100%;
             border-collapse: collapse;
-            background: #fff;
+            background: var(--surface);
             font-size: 12px;
          }
          th {
-            background: #eaf2f8;
+            background: var(--surface-alt);
             color: var(--n);
             text-align: left;
             padding: 10px;
@@ -196,7 +246,7 @@
          }
          td {
             padding: 10px;
-            border-top: 1px solid #edf1f4;
+            border-top: 1px solid var(--border);
          }
          td.num {
             text-align: right;
@@ -204,7 +254,7 @@
          tfoot td {
             position: sticky;
             bottom: 0;
-            background: #eaf2f8;
+            background: var(--surface-alt);
             color: var(--n);
             font-weight: 700;
             border-top: 2px solid var(--l);
@@ -245,9 +295,20 @@
                   <h1>Service Department Dashboard</h1>
                   <p>Work In Process • Aged Service ROs • Backordered Parts • Uptime Assist • Upcoming PRI Appointments</p>
                </div>
-               <div class="stamp">
-                  Reporting date: <strong id="date">Today</strong><br />Updated:
-                  <span id="updated"></span>
+               <div style="display: flex; align-items: center; gap: 10px">
+                  <div class="stamp">
+                     Reporting date: <strong id="date">Today</strong><br />Updated:
+                     <span id="updated"></span>
+                  </div>
+                  <button
+                     id="themeToggle"
+                     class="theme-toggle"
+                     type="button"
+                     onclick="toggleTheme()"
+                     aria-label="Toggle dark mode"
+                  >
+                     <span id="themeToggleIcon">🌙</span>
+                  </button>
                </div>
             </div>
          </header>
@@ -445,6 +506,38 @@
          // How often to automatically re-pull the CSV, in milliseconds.
          // 300000 = 5 minutes. Set to 0 to disable auto-refresh (manual button only).
          const REFRESH_INTERVAL_MS = 300000;
+
+         // ==========================================
+         // THEME
+         // ==========================================
+
+         const THEME_STORAGE_KEY = "kpiDashboardTheme";
+
+         function applyTheme(theme) {
+            document.documentElement.setAttribute("data-theme", theme);
+
+            const icon = document.getElementById("themeToggleIcon");
+            if (icon) {
+               icon.textContent = theme === "dark" ? "☀️" : "🌙";
+            }
+         }
+
+         function toggleTheme() {
+            const current =
+               document.documentElement.getAttribute("data-theme") === "dark"
+                  ? "dark"
+                  : "light";
+            const next = current === "dark" ? "light" : "dark";
+
+            localStorage.setItem(THEME_STORAGE_KEY, next);
+            applyTheme(next);
+         }
+
+         applyTheme(
+            document.documentElement.getAttribute("data-theme") === "dark"
+               ? "dark"
+               : "light",
+         );
 
          // ==========================================
          // NAVIGATION
