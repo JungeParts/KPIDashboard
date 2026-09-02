@@ -83,14 +83,13 @@ parentheses):
 
 ### Inventory aging — `AGING_CSV_PATH` (`index.html` only)
 
-One data row, the current aging-by-value split:
+Sheet tab: `InventoryAgingbyValue`. One data row, the current aging-by-value
+split:
 
 | Column | Notes |
 |---|---|
-| `Aging0to6` (0-6 Months) | dollars |
-| `Aging7to12` (7-12 Months) | dollars |
-| `Aging13to24` (13-24 Months) | dollars |
-| `Aging25plus` (25+ Months) | dollars |
+| `Aging6to11` (6-11 Months) | dollars |
+| `Aging12plus` (12+ Months) | dollars |
 
 ### Open Purchase Orders — `OPEN_POS_CSV_PATH` (`index.html` only)
 
