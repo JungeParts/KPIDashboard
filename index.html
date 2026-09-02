@@ -347,6 +347,11 @@
                   <div class="value" id="ExcessInventory">18.4%</div>
                   <div class="detail warn"></div>
                </div>
+               <div class="card">
+                  <div class="label">Months Supply On Hand</div>
+                  <div class="value" id="MonthsSupply">1.5</div>
+                  <div class="detail warn"></div>
+               </div>
             </div>
          </section>
          <section class="section">
@@ -683,6 +688,11 @@
       percent(getFieldValue(kpi, ["ExcessInventory", "Excess Inventory"]))
    );
 
+    setValue(
+      "MonthsSupply",
+      percent(getFieldValue(kpi, ["MonthsSupply", "Months Supply"]))
+   );
+    
    setValue(
       "PartsSalesToday",
       currency(getFieldValue(kpi, ["PartsSalesToday", "Parts Sales Today", "Parts Sales"]))
