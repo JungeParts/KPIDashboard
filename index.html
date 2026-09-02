@@ -578,10 +578,12 @@
                      <thead>
                         <tr>
                            <th>PO #</th>
-                           <th>Vendor</th>
                            <th>Order Date</th>
-                           <th>ETA</th>
-                           <th>Status</th>
+                           <th>Vendor</th>
+                           <th>Name</th>
+                           <th>User</th>
+                           <th>Control</th>
+                           <th>Account</th>
                            <th>Amount</th>
                         </tr>
                      </thead>
@@ -1276,10 +1278,12 @@ async function loadKpiCsv() {
 
          const OPEN_POS_COLUMNS = [
             { fields: ["PO", "PO Number", "PO#", "PONumber"] },
-            { fields: ["Vendor", "Supplier"] },
-            { fields: ["Order Date", "OrderDate", "PO Date"] },
-            { fields: ["ETA", "Expected", "Expected Date"] },
-            { fields: ["Status"] },
+            { fields: ["Order Date"] },
+            { fields: ["Vendor"] },
+            { fields: ["Name"] },
+            { fields: ["User"] },
+            { fields: ["Control"] },
+            { fields: ["Account"] },
             { fields: ["Amount", "PO Amount", "Total"], format: currency, numeric: true },
          ];
 
