@@ -298,6 +298,14 @@
          td.num {
             text-align: right;
          }
+         tfoot td {
+            position: sticky;
+            bottom: 0;
+            background: var(--surface-alt);
+            color: var(--n);
+            font-weight: 700;
+            border-top: 2px solid var(--l);
+         }
          #scorecardTable th:nth-child(2),
          #scorecardTable th:nth-child(3),
          #scorecardTable td:nth-child(2),
@@ -589,9 +597,15 @@
                      </thead>
                      <tbody id="openPosQueue">
                         <tr>
-                           <td colspan="6" class="muted">Loading open PO data…</td>
+                           <td colspan="8" class="muted">Loading open PO data…</td>
                         </tr>
                      </tbody>
+                     <tfoot>
+                        <tr>
+                           <td colspan="7">Total</td>
+                           <td class="num" id="openPosTotal">—</td>
+                        </tr>
+                     </tfoot>
                   </table>
                </div>
             </div>
@@ -1238,7 +1252,7 @@ async function loadKpiCsv() {
                .join("");
          }
 
-         async function loadCsvList(path, tbodyId, columns, emptyMessage, countId) {
+         async function loadCsvList(path, tbodyId, columns, emptyMessage, countId, totalOptions) {
             const tbody = document.getElementById(tbodyId);
 
             try {
@@ -1256,11 +1270,24 @@ async function loadKpiCsv() {
                }
 
                renderRecordTable(tbodyId, records, columns, emptyMessage);
+
+               if (totalOptions) {
+                  const total = records.reduce(
+                     (sum, record) =>
+                        sum + parseNumber(getFieldValue(record, totalOptions.fields)),
+                     0,
+                  );
+                  setValue(totalOptions.elementId, currency(total));
+               }
             } catch (error) {
                console.error("CSV Load Error:", path, error);
 
                if (countId) {
                   setValue(countId, "—");
+               }
+
+               if (totalOptions) {
+                  setValue(totalOptions.elementId, "—");
                }
 
                if (tbody) {
@@ -1294,6 +1321,7 @@ async function loadKpiCsv() {
                OPEN_POS_COLUMNS,
                "No open purchase orders.",
                "openPosCount",
+               { fields: ["Amount", "PO Amount", "Total"], elementId: "openPosTotal" },
             );
          }
 
