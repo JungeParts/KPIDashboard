@@ -149,6 +149,24 @@ One row per backordered part. Every row shown as-is, no filtering.
 | `Part Number` (Part #) |
 | `Status` |
 
+### Missed Opportunities — `MISSED_OPPORTUNITIES_CSV_PATH` (`service-department.html`)
+
+One row per recommended service that was declined or not sold. Every row
+shown as-is, no filtering; the total sums the value column.
+
+| Column | Notes |
+|---|---|
+| `RO` (RO Number) | |
+| `Customer` | |
+| `Vehicle` (VIN) | |
+| `Recommended Service` (Service, Description) | |
+| `Reason` (Reason Declined, Decline Reason) | |
+| `Est. Value` (Estimated Value, Value, Amount) | dollars |
+
+Not wired up to a sheet yet — `MISSED_OPPORTUNITIES_CSV_PATH` is blank, so
+the panel shows "CSV link not yet configured." until a published Google
+Sheets CSV link is pasted in.
+
 ### Trend history — `TREND_CSV_PATH` (`trend-analysis.html` only)
 
 This feed works differently from every other one on this page: instead of
@@ -219,7 +237,7 @@ this is a starting point, not a drop-in fit for every spreadsheet layout.
 
 - `index.html`: `CSV_PATH`, `AGING_CSV_PATH`, `OPEN_POS_CSV_PATH` (in the `CONFIG` section of the `<script>`)
 - `service-department.html`: `CSV_PATH`, `AGED_RO_CSV_PATH`, `BACKORDERED_PARTS_CSV_PATH`,
-  `UPTIME_ASSIST_CSV_PATH`, `UPCOMING_PRI_CSV_PATH` (same `CONFIG` section)
+  `UPTIME_ASSIST_CSV_PATH`, `UPCOMING_PRI_CSV_PATH`, `MISSED_OPPORTUNITIES_CSV_PATH` (same `CONFIG` section)
 - `trend-analysis.html`: `TREND_CSV_PATH` (same `CONFIG` section)
 
 Until each constant is swapped to a published Google Sheets link, it keeps

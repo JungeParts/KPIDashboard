@@ -466,6 +466,43 @@
                </div>
             </div>
          </section>
+         <section class="section">
+            <h2>Missed Opportunities</h2>
+            <p class="note">Recommended services declined or not sold.</p>
+            <div class="panel">
+               <div class="metrics" style="margin-bottom: 14px">
+                  <div class="metric">
+                     <span>Missed opportunities</span
+                     ><strong class="warn" id="missedOpportunitiesCount">—</strong>
+                  </div>
+               </div>
+               <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
+                  <table>
+                     <thead>
+                        <tr>
+                           <th>RO</th>
+                           <th>Customer</th>
+                           <th>Vehicle</th>
+                           <th>Recommended Service</th>
+                           <th>Reason</th>
+                           <th>Est. Value</th>
+                        </tr>
+                     </thead>
+                     <tbody id="missedOpportunitiesQueue">
+                        <tr>
+                           <td colspan="6" class="muted">Loading missed opportunities data…</td>
+                        </tr>
+                     </tbody>
+                     <tfoot>
+                        <tr>
+                           <td colspan="5">Total</td>
+                           <td class="num" id="missedOpportunitiesTotal">—</td>
+                        </tr>
+                     </tfoot>
+                  </table>
+               </div>
+            </div>
+         </section>
          <footer class="footer">
             Created by Sam Glidewell - Junge Automotive Group 2026 ·
             <a href="index.html">Parts Dashboard</a> ·
@@ -503,6 +540,10 @@
 
          // Upcoming appointments with PRI (parts-on-order) parts. Manually maintained — see note above.
          const UPCOMING_PRI_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=970116550";
+
+         // Missed opportunities — recommended services declined or not sold.
+         // TODO: paste the published Google Sheets CSV link here once available.
+         const MISSED_OPPORTUNITIES_CSV_PATH = "";
 
          // How often to automatically re-pull the CSV, in milliseconds.
          // 300000 = 5 minutes. Set to 0 to disable auto-refresh (manual button only).
@@ -867,7 +908,8 @@
          /**
           * Renders `records` straight into a table body, one row per record,
           * with no filtering or sorting — these lists are curated in the
-          * uploaded CSV itself.
+          * uploaded CSV itself. Columns may supply a `format` function
+          * (e.g. currency) and a `numeric` flag to right-align the cell.
           */
          function renderRecordTable(tbodyId, records, columns, emptyMessage) {
             const tbody = document.getElementById(tbodyId);
@@ -883,15 +925,36 @@
             tbody.innerHTML = records
                .map((record) => {
                   const cells = columns
-                     .map((column) => `<td>${escapeHtml(getFieldValue(record, column.fields))}</td>`)
+                     .map((column) => {
+                        const raw = getFieldValue(record, column.fields);
+                        const value = column.format ? column.format(raw) : raw;
+                        const cls = column.numeric ? ' class="num"' : "";
+                        return `<td${cls}>${escapeHtml(value)}</td>`;
+                     })
                      .join("");
                   return `<tr>${cells}</tr>`;
                })
                .join("");
          }
 
-         async function loadCsvList(path, tbodyId, columns, emptyMessage, countId) {
+         async function loadCsvList(path, tbodyId, columns, emptyMessage, countId, totalOptions) {
             const tbody = document.getElementById(tbodyId);
+
+            if (!path) {
+               if (countId) {
+                  setValue(countId, "—");
+               }
+
+               if (totalOptions) {
+                  setValue(totalOptions.elementId, "—");
+               }
+
+               if (tbody) {
+                  tbody.innerHTML = `<tr><td colspan="${columns.length}" class="muted">CSV link not yet configured.</td></tr>`;
+               }
+
+               return;
+            }
 
             try {
                const response = await fetch(withCacheBust(path), { cache: "no-store" });
@@ -908,11 +971,24 @@
                }
 
                renderRecordTable(tbodyId, records, columns, emptyMessage);
+
+               if (totalOptions) {
+                  const total = records.reduce(
+                     (sum, record) =>
+                        sum + parseNumber(getFieldValue(record, totalOptions.fields)),
+                     0,
+                  );
+                  setValue(totalOptions.elementId, currency(total));
+               }
             } catch (error) {
                console.error("CSV Load Error:", path, error);
 
                if (countId) {
                   setValue(countId, "—");
+               }
+
+               if (totalOptions) {
+                  setValue(totalOptions.elementId, "—");
                }
 
                if (tbody) {
@@ -942,6 +1018,19 @@
             { fields: ["VIN"] },
             { fields: ["Part Number", "PartNumber", "Part #"] },
             { fields: ["Status"] },
+         ];
+
+         const MISSED_OPPORTUNITIES_COLUMNS = [
+            { fields: ["RO", "RO Number", "RONumber"] },
+            { fields: ["Customer"] },
+            { fields: ["Vehicle", "VIN"] },
+            { fields: ["Recommended Service", "Service", "Description"] },
+            { fields: ["Reason", "Reason Declined", "Decline Reason"] },
+            {
+               fields: ["Est. Value", "Estimated Value", "Value", "Amount"],
+               format: currency,
+               numeric: true,
+            },
          ];
 
          function loadBackorderedPartsCsv() {
@@ -974,6 +1063,20 @@
             );
          }
 
+         function loadMissedOpportunitiesCsv() {
+            return loadCsvList(
+               MISSED_OPPORTUNITIES_CSV_PATH,
+               "missedOpportunitiesQueue",
+               MISSED_OPPORTUNITIES_COLUMNS,
+               "No missed opportunities.",
+               "missedOpportunitiesCount",
+               {
+                  fields: ["Est. Value", "Estimated Value", "Value", "Amount"],
+                  elementId: "missedOpportunitiesTotal",
+               },
+            );
+         }
+
          // ==========================================
          // STARTUP
          // ==========================================
@@ -992,6 +1095,7 @@
                   loadBackorderedPartsCsv(),
                   loadUptimeAssistCsv(),
                   loadUpcomingPriCsv(),
+                  loadMissedOpportunitiesCsv(),
                ]);
             } finally {
                if (btn) {
