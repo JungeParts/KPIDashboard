@@ -172,19 +172,28 @@ number moves over time. Row 1 is still the header row.
 Set it up the same way as every other feed (see steps 1-5 above), then paste
 the CSV URL into `TREND_CSV_PATH` in `trend-analysis.html`.
 
-**Adding a row every day.** The simplest approach: once a day, copy that
-day's values from the main `KPI` tab and the `InventoryAgingbyValue` tab
-into a new row at the bottom of the history tab. To automate it instead,
-open **Extensions → Apps Script** on the spreadsheet, paste this in, then
-add a time-driven trigger (Triggers ⏱ → Add Trigger → `snapshotDailyHistory`
-→ Day timer → whatever time your numbers are finalized, e.g. 6pm):
+**Adding a row every day, automatically.** Open **Extensions → Apps Script**
+on the spreadsheet, delete whatever's in the editor, paste this in, then
+save (the disk icon, or `Ctrl+S`/`Cmd+S`):
 
 ```javascript
+// Adjust these three to match your actual tab names.
+const SOURCE_SHEET_NAME = "KPI"; // main KPI tab (CSV_PATH, gid=0)
+const AGING_SHEET_NAME = "InventoryAgingbyValue"; // AGING_CSV_PATH tab
+const HISTORY_SHEET_NAME = "History"; // TREND_CSV_PATH tab
+
 function snapshotDailyHistory() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const kpi = ss.getSheetByName("KPI"); // main KPI tab (CSV_PATH, gid=0)
-  const aging = ss.getSheetByName("InventoryAgingbyValue");
-  const history = ss.getSheetByName("History");
+  const kpi = ss.getSheetByName(SOURCE_SHEET_NAME);
+  const aging = ss.getSheetByName(AGING_SHEET_NAME);
+  const history = ss.getSheetByName(HISTORY_SHEET_NAME);
+
+  if (!kpi || !aging || !history) {
+    throw new Error(
+      "snapshotDailyHistory: check SOURCE_SHEET_NAME / AGING_SHEET_NAME / " +
+        "HISTORY_SHEET_NAME at the top of the script against your actual tab names."
+    );
+  }
 
   // Row 2 holds the current values on both source tabs (row 1 is headers).
   const kpiHeaders = kpi.getRange(1, 1, 1, kpi.getLastColumn()).getValues()[0];
@@ -197,8 +206,10 @@ function snapshotDailyHistory() {
     return index === -1 ? "" : values[index];
   }
 
-  history.appendRow([
-    Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd"),
+  const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
+
+  const row = [
+    today,
     find(kpiHeaders, kpiValues, "DemandFillRate"),
     find(kpiHeaders, kpiValues, "GrossProfitPercent"),
     find(kpiHeaders, kpiValues, "LostSales"),
@@ -208,9 +219,44 @@ function snapshotDailyHistory() {
     find(kpiHeaders, kpiValues, "PartsSalesToday"),
     find(agingHeaders, agingValues, "Aging6to11"),
     find(agingHeaders, agingValues, "Aging12plus"),
-  ]);
+  ];
+
+  // Upsert into the correct date row: if today's date is already in the
+  // History tab (e.g. this ran earlier today, or someone already added
+  // today's numbers by hand), overwrite that row instead of appending a
+  // duplicate. Otherwise append a new row at the bottom.
+  const lastRow = history.getLastRow();
+  const existingDates =
+    lastRow > 1 ? history.getRange(2, 1, lastRow - 1, 1).getValues().flat() : [];
+
+  const todayRowOffset = existingDates.findIndex((cell) => {
+    const cellDate =
+      cell instanceof Date
+        ? Utilities.formatDate(cell, Session.getScriptTimeZone(), "yyyy-MM-dd")
+        : String(cell).trim();
+    return cellDate === today;
+  });
+
+  if (todayRowOffset === -1) {
+    history.appendRow(row);
+  } else {
+    const sheetRow = todayRowOffset + 2; // +1 for the header row, +1 for 1-based rows
+    history.getRange(sheetRow, 1, 1, row.length).setValues([row]);
+  }
 }
 ```
+
+Then set it to run daily: **Triggers** (clock icon on the left) → **Add
+Trigger** → function `snapshotDailyHistory` → event source **Time-driven** →
+**Day timer** → pick an hour after your numbers are finalized for the day
+(e.g. 6pm–7pm) → **Save**. The first save prompts you to authorize the
+script (it only needs access to this one spreadsheet) — approve it, then
+optionally run `snapshotDailyHistory` once manually from the editor
+(▷ **Run**) to confirm it drops today's row into `History` correctly.
+
+`MonthsSupply` isn't one of the Main KPI feed's columns (see the table
+above), so it comes through blank unless you add a column with that exact
+name to the `KPI` tab — that's expected, not a bug.
 
 Adjust the sheet/tab names and column names in the script to match yours —
 this is a starting point, not a drop-in fit for every spreadsheet layout.
