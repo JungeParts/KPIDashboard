@@ -293,7 +293,7 @@
             <div class="toprow">
                <div>
                   <h1>Service Department Dashboard</h1>
-                  <p>Work In Process • Aged Service ROs • Backordered Parts • Uptime Assist • Upcoming PRI Appointments</p>
+                  <p>Work In Process • Aged Service ROs • Backordered Parts • Uptime Assist • Upcoming PRI Appointments • Missed Opportunities</p>
                </div>
                <div style="display: flex; align-items: center; gap: 10px">
                   <div class="stamp">
@@ -466,6 +466,60 @@
                </div>
             </div>
          </section>
+         <section class="section">
+            <h2>Missed Opportunities</h2>
+            <p class="note">Per-advisor MPI+3 and missed-opportunity scorecard.</p>
+            <div class="panel">
+               <div class="metrics" style="margin-bottom: 14px">
+                  <div class="metric">
+                     <span>Service advisors reported</span
+                     ><strong class="warn" id="missedOpportunitiesCount">—</strong>
+                  </div>
+               </div>
+               <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
+                  <table>
+                     <thead>
+                        <tr>
+                           <th>Dealer Code</th>
+                           <th>Service Advisor ID</th>
+                           <th>Total ROs</th>
+                           <th>CP Missed Opp.</th>
+                           <th>Missed Opp. (Warranty)</th>
+                           <th>Missed Opp. (Recall)</th>
+                           <th>Missed Opp. (Red Coding)</th>
+                           <th>Warr RO w/o CP &amp; Recall</th>
+                           <th>Recall RO w/o CP</th>
+                           <th>MPI+3 RO</th>
+                           <th>MPI+3 Utilization %</th>
+                           <th>Red Brake Count</th>
+                           <th>Red Battery Count</th>
+                           <th>Red Tire Count</th>
+                           <th>Red Wiper Count</th>
+                           <th>Red Cabin Air Filter Count</th>
+                           <th>Brake Penetration %</th>
+                           <th>Battery Penetration %</th>
+                           <th>Tire Penetration %</th>
+                           <th>Wiper Penetration %</th>
+                           <th>Cabin Air Filter Penetration %</th>
+                           <th>Red Brake 60d Return Rate</th>
+                           <th>Red Battery 60d Return Rate</th>
+                           <th>Red Tire 60d Return Rate</th>
+                           <th>Red Wiper 60d Return Rate</th>
+                           <th>Red Cabin Air 60d Return Rate</th>
+                           <th>Total VIN #</th>
+                           <th>Recall ROs Missing MPI+3</th>
+                           <th>Warranty ROs Missing MPI+3</th>
+                        </tr>
+                     </thead>
+                     <tbody id="missedOpportunitiesQueue">
+                        <tr>
+                           <td colspan="29" class="muted">Loading missed opportunities data…</td>
+                        </tr>
+                     </tbody>
+                  </table>
+               </div>
+            </div>
+         </section>
          <footer class="footer">
             Created by Sam Glidewell - Junge Automotive Group 2026 ·
             <a href="index.html">Parts Dashboard</a> ·
@@ -503,6 +557,10 @@
 
          // Upcoming appointments with PRI (parts-on-order) parts. Manually maintained — see note above.
          const UPCOMING_PRI_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=970116550";
+
+         // Missed opportunities — recommended services declined or not sold.
+         // Manually maintained — see note above.
+         const MISSED_OPPORTUNITIES_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=1553069819";
 
          // How often to automatically re-pull the CSV, in milliseconds.
          // 300000 = 5 minutes. Set to 0 to disable auto-refresh (manual button only).
@@ -568,6 +626,14 @@
                style: "currency",
                currency: "USD",
             });
+         }
+
+         // Formats a percent field for display. Handles both a raw number
+         // ("94.2") and a value a spreadsheet already rendered as text with
+         // its own "%" sign ("94.20%") — parseNumber strips non-numeric
+         // characters either way, so this never double-stamps the sign.
+         function percent(value) {
+            return `${parseNumber(value)}%`;
          }
 
          /**
@@ -867,7 +933,8 @@
          /**
           * Renders `records` straight into a table body, one row per record,
           * with no filtering or sorting — these lists are curated in the
-          * uploaded CSV itself.
+          * uploaded CSV itself. Columns may supply a `format` function
+          * (e.g. currency) and a `numeric` flag to right-align the cell.
           */
          function renderRecordTable(tbodyId, records, columns, emptyMessage) {
             const tbody = document.getElementById(tbodyId);
@@ -883,15 +950,36 @@
             tbody.innerHTML = records
                .map((record) => {
                   const cells = columns
-                     .map((column) => `<td>${escapeHtml(getFieldValue(record, column.fields))}</td>`)
+                     .map((column) => {
+                        const raw = getFieldValue(record, column.fields);
+                        const value = column.format ? column.format(raw) : raw;
+                        const cls = column.numeric ? ' class="num"' : "";
+                        return `<td${cls}>${escapeHtml(value)}</td>`;
+                     })
                      .join("");
                   return `<tr>${cells}</tr>`;
                })
                .join("");
          }
 
-         async function loadCsvList(path, tbodyId, columns, emptyMessage, countId) {
+         async function loadCsvList(path, tbodyId, columns, emptyMessage, countId, totalOptions) {
             const tbody = document.getElementById(tbodyId);
+
+            if (!path) {
+               if (countId) {
+                  setValue(countId, "—");
+               }
+
+               if (totalOptions) {
+                  setValue(totalOptions.elementId, "—");
+               }
+
+               if (tbody) {
+                  tbody.innerHTML = `<tr><td colspan="${columns.length}" class="muted">CSV link not yet configured.</td></tr>`;
+               }
+
+               return;
+            }
 
             try {
                const response = await fetch(withCacheBust(path), { cache: "no-store" });
@@ -908,11 +996,24 @@
                }
 
                renderRecordTable(tbodyId, records, columns, emptyMessage);
+
+               if (totalOptions) {
+                  const total = records.reduce(
+                     (sum, record) =>
+                        sum + parseNumber(getFieldValue(record, totalOptions.fields)),
+                     0,
+                  );
+                  setValue(totalOptions.elementId, currency(total));
+               }
             } catch (error) {
                console.error("CSV Load Error:", path, error);
 
                if (countId) {
                   setValue(countId, "—");
+               }
+
+               if (totalOptions) {
+                  setValue(totalOptions.elementId, "—");
                }
 
                if (tbody) {
@@ -942,6 +1043,38 @@
             { fields: ["VIN"] },
             { fields: ["Part Number", "PartNumber", "Part #"] },
             { fields: ["Status"] },
+         ];
+
+         const MISSED_OPPORTUNITIES_COLUMNS = [
+            { fields: ["Dealer Code"] },
+            { fields: ["Service Advisor ID"] },
+            { fields: ["Total Repair Orders"], numeric: true },
+            { fields: ["Customer Pay Missed Opportunity"], numeric: true },
+            { fields: ["Missed Opportunity (Warranty)"], numeric: true },
+            { fields: ["Missed Opportunity (Recall)"], numeric: true },
+            { fields: ["Missed Opportunity (Red Coding)"], numeric: true },
+            { fields: ["Warr RO w/o CP and Recall"], numeric: true },
+            { fields: ["Recall RO w/o CP"], numeric: true },
+            { fields: ["MPI+3 RO"], numeric: true },
+            { fields: ["MPI+3 Utilization %"], format: percent, numeric: true },
+            { fields: ["Red Brake Count"], numeric: true },
+            { fields: ["Red Battery Count"], numeric: true },
+            { fields: ["Red Tire Count"], numeric: true },
+            { fields: ["Red Wiper Count"], numeric: true },
+            { fields: ["Red Cabin Air Filter Count"], numeric: true },
+            { fields: ["Brake Penetration %"], format: percent, numeric: true },
+            { fields: ["Battery Penetration %"], format: percent, numeric: true },
+            { fields: ["Tire Penetration %"], format: percent, numeric: true },
+            { fields: ["Wiper Penetration %"], format: percent, numeric: true },
+            { fields: ["Cabin Air Filter Penetration %"], format: percent, numeric: true },
+            { fields: ["Red Brake 60 day Return Rate"], format: percent, numeric: true },
+            { fields: ["Red Battery 60 day Return Rate"], format: percent, numeric: true },
+            { fields: ["Red Tire 60 day Return Rate"], format: percent, numeric: true },
+            { fields: ["Red Wiper 60 day Return Rate"], format: percent, numeric: true },
+            { fields: ["Red Cabin Air 60 day Return Rate"], format: percent, numeric: true },
+            { fields: ["Total VIN #"], numeric: true },
+            { fields: ["Recall ROs Missing MPI+3"], numeric: true },
+            { fields: ["Warranty ROs Missing MPI+3"], numeric: true },
          ];
 
          function loadBackorderedPartsCsv() {
@@ -974,6 +1107,16 @@
             );
          }
 
+         function loadMissedOpportunitiesCsv() {
+            return loadCsvList(
+               MISSED_OPPORTUNITIES_CSV_PATH,
+               "missedOpportunitiesQueue",
+               MISSED_OPPORTUNITIES_COLUMNS,
+               "No missed opportunities data reported.",
+               "missedOpportunitiesCount",
+            );
+         }
+
          // ==========================================
          // STARTUP
          // ==========================================
@@ -992,6 +1135,7 @@
                   loadBackorderedPartsCsv(),
                   loadUptimeAssistCsv(),
                   loadUpcomingPriCsv(),
+                  loadMissedOpportunitiesCsv(),
                ]);
             } finally {
                if (btn) {
