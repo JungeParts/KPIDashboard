@@ -151,17 +151,39 @@ One row per backordered part. Every row shown as-is, no filtering.
 
 ### Missed Opportunities — `MISSED_OPPORTUNITIES_CSV_PATH` (`service-department.html`)
 
-One row per recommended service that was declined or not sold. Every row
-shown as-is, no filtering; the total sums the value column.
+One row per service advisor. Every row shown as-is, no filtering.
 
-| Column | Notes |
-|---|---|
-| `RO` (RO Number) | |
-| `Customer` | |
-| `Vehicle` (VIN) | |
-| `Recommended Service` (Service, Description) | |
-| `Reason` (Reason Declined, Decline Reason) | |
-| `Est. Value` (Estimated Value, Value, Amount) | dollars |
+| Column |
+|---|
+| `Dealer Code` |
+| `Service Advisor ID` |
+| `Total Repair Orders` |
+| `Customer Pay Missed Opportunity` |
+| `Missed Opportunity (Warranty)` |
+| `Missed Opportunity (Recall)` |
+| `Missed Opportunity (Red Coding)` |
+| `Warr RO w/o CP and Recall` |
+| `Recall RO w/o CP` |
+| `MPI+3 RO` |
+| `MPI+3 Utilization %` |
+| `Red Brake Count` |
+| `Red Battery Count` |
+| `Red Tire Count` |
+| `Red Wiper Count` |
+| `Red Cabin Air Filter Count` |
+| `Brake Penetration %` |
+| `Battery Penetration %` |
+| `Tire Penetration %` |
+| `Wiper Penetration %` |
+| `Cabin Air Filter Penetration %` |
+| `Red Brake 60 day Return Rate` |
+| `Red Battery 60 day Return Rate` |
+| `Red Tire 60 day Return Rate` |
+| `Red Wiper 60 day Return Rate` |
+| `Red Cabin Air 60 day Return Rate` |
+| `Total VIN #` |
+| `Recall ROs Missing MPI+3` |
+| `Warranty ROs Missing MPI+3` |
 
 
 ### Trend history — `TREND_CSV_PATH` (`trend-analysis.html` only)

@@ -293,7 +293,7 @@
             <div class="toprow">
                <div>
                   <h1>Service Department Dashboard</h1>
-                  <p>Work In Process • Aged Service ROs • Backordered Parts • Uptime Assist • Upcoming PRI Appointments</p>
+                  <p>Work In Process • Aged Service ROs • Backordered Parts • Uptime Assist • Upcoming PRI Appointments • Missed Opportunities</p>
                </div>
                <div style="display: flex; align-items: center; gap: 10px">
                   <div class="stamp">
@@ -468,11 +468,11 @@
          </section>
          <section class="section">
             <h2>Missed Opportunities</h2>
-            <p class="note">Recommended services declined or not sold.</p>
+            <p class="note">Per-advisor MPI+3 and missed-opportunity scorecard.</p>
             <div class="panel">
                <div class="metrics" style="margin-bottom: 14px">
                   <div class="metric">
-                     <span>Missed opportunities</span
+                     <span>Service advisors reported</span
                      ><strong class="warn" id="missedOpportunitiesCount">—</strong>
                   </div>
                </div>
@@ -480,25 +480,42 @@
                   <table>
                      <thead>
                         <tr>
-                           <th>RO</th>
-                           <th>Customer</th>
-                           <th>Vehicle</th>
-                           <th>Recommended Service</th>
-                           <th>Reason</th>
-                           <th>Est. Value</th>
+                           <th>Dealer Code</th>
+                           <th>Service Advisor ID</th>
+                           <th>Total ROs</th>
+                           <th>CP Missed Opp.</th>
+                           <th>Missed Opp. (Warranty)</th>
+                           <th>Missed Opp. (Recall)</th>
+                           <th>Missed Opp. (Red Coding)</th>
+                           <th>Warr RO w/o CP &amp; Recall</th>
+                           <th>Recall RO w/o CP</th>
+                           <th>MPI+3 RO</th>
+                           <th>MPI+3 Utilization %</th>
+                           <th>Red Brake Count</th>
+                           <th>Red Battery Count</th>
+                           <th>Red Tire Count</th>
+                           <th>Red Wiper Count</th>
+                           <th>Red Cabin Air Filter Count</th>
+                           <th>Brake Penetration %</th>
+                           <th>Battery Penetration %</th>
+                           <th>Tire Penetration %</th>
+                           <th>Wiper Penetration %</th>
+                           <th>Cabin Air Filter Penetration %</th>
+                           <th>Red Brake 60d Return Rate</th>
+                           <th>Red Battery 60d Return Rate</th>
+                           <th>Red Tire 60d Return Rate</th>
+                           <th>Red Wiper 60d Return Rate</th>
+                           <th>Red Cabin Air 60d Return Rate</th>
+                           <th>Total VIN #</th>
+                           <th>Recall ROs Missing MPI+3</th>
+                           <th>Warranty ROs Missing MPI+3</th>
                         </tr>
                      </thead>
                      <tbody id="missedOpportunitiesQueue">
                         <tr>
-                           <td colspan="6" class="muted">Loading missed opportunities data…</td>
+                           <td colspan="29" class="muted">Loading missed opportunities data…</td>
                         </tr>
                      </tbody>
-                     <tfoot>
-                        <tr>
-                           <td colspan="5">Total</td>
-                           <td class="num" id="missedOpportunitiesTotal">—</td>
-                        </tr>
-                     </tfoot>
                   </table>
                </div>
             </div>
@@ -609,6 +626,14 @@
                style: "currency",
                currency: "USD",
             });
+         }
+
+         // Formats a percent field for display. Handles both a raw number
+         // ("94.2") and a value a spreadsheet already rendered as text with
+         // its own "%" sign ("94.20%") — parseNumber strips non-numeric
+         // characters either way, so this never double-stamps the sign.
+         function percent(value) {
+            return `${parseNumber(value)}%`;
          }
 
          /**
@@ -1021,16 +1046,35 @@
          ];
 
          const MISSED_OPPORTUNITIES_COLUMNS = [
-            { fields: ["RO", "RO Number", "RONumber"] },
-            { fields: ["Customer"] },
-            { fields: ["Vehicle", "VIN"] },
-            { fields: ["Recommended Service", "Service", "Description"] },
-            { fields: ["Reason", "Reason Declined", "Decline Reason"] },
-            {
-               fields: ["Est. Value", "Estimated Value", "Value", "Amount"],
-               format: currency,
-               numeric: true,
-            },
+            { fields: ["Dealer Code"] },
+            { fields: ["Service Advisor ID"] },
+            { fields: ["Total Repair Orders"], numeric: true },
+            { fields: ["Customer Pay Missed Opportunity"], numeric: true },
+            { fields: ["Missed Opportunity (Warranty)"], numeric: true },
+            { fields: ["Missed Opportunity (Recall)"], numeric: true },
+            { fields: ["Missed Opportunity (Red Coding)"], numeric: true },
+            { fields: ["Warr RO w/o CP and Recall"], numeric: true },
+            { fields: ["Recall RO w/o CP"], numeric: true },
+            { fields: ["MPI+3 RO"], numeric: true },
+            { fields: ["MPI+3 Utilization %"], format: percent, numeric: true },
+            { fields: ["Red Brake Count"], numeric: true },
+            { fields: ["Red Battery Count"], numeric: true },
+            { fields: ["Red Tire Count"], numeric: true },
+            { fields: ["Red Wiper Count"], numeric: true },
+            { fields: ["Red Cabin Air Filter Count"], numeric: true },
+            { fields: ["Brake Penetration %"], format: percent, numeric: true },
+            { fields: ["Battery Penetration %"], format: percent, numeric: true },
+            { fields: ["Tire Penetration %"], format: percent, numeric: true },
+            { fields: ["Wiper Penetration %"], format: percent, numeric: true },
+            { fields: ["Cabin Air Filter Penetration %"], format: percent, numeric: true },
+            { fields: ["Red Brake 60 day Return Rate"], format: percent, numeric: true },
+            { fields: ["Red Battery 60 day Return Rate"], format: percent, numeric: true },
+            { fields: ["Red Tire 60 day Return Rate"], format: percent, numeric: true },
+            { fields: ["Red Wiper 60 day Return Rate"], format: percent, numeric: true },
+            { fields: ["Red Cabin Air 60 day Return Rate"], format: percent, numeric: true },
+            { fields: ["Total VIN #"], numeric: true },
+            { fields: ["Recall ROs Missing MPI+3"], numeric: true },
+            { fields: ["Warranty ROs Missing MPI+3"], numeric: true },
          ];
 
          function loadBackorderedPartsCsv() {
@@ -1068,12 +1112,8 @@
                MISSED_OPPORTUNITIES_CSV_PATH,
                "missedOpportunitiesQueue",
                MISSED_OPPORTUNITIES_COLUMNS,
-               "No missed opportunities.",
+               "No missed opportunities data reported.",
                "missedOpportunitiesCount",
-               {
-                  fields: ["Est. Value", "Estimated Value", "Value", "Amount"],
-                  elementId: "missedOpportunitiesTotal",
-               },
             );
          }
 
