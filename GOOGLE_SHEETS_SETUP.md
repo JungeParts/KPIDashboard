@@ -163,9 +163,6 @@ shown as-is, no filtering; the total sums the value column.
 | `Reason` (Reason Declined, Decline Reason) | |
 | `Est. Value` (Estimated Value, Value, Amount) | dollars |
 
-Not wired up to a sheet yet — `MISSED_OPPORTUNITIES_CSV_PATH` is blank, so
-the panel shows "CSV link not yet configured." until a published Google
-Sheets CSV link is pasted in.
 
 ### Trend history — `TREND_CSV_PATH` (`trend-analysis.html` only)
 
