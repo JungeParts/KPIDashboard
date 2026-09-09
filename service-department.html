@@ -212,6 +212,48 @@
          .bad {
             color: var(--r);
          }
+         .critical-card {
+            border: 3px solid #ff0000;
+            background: #ffe5e5;
+            box-shadow: 0 0 0 1px #ff0000 inset;
+         }
+         :root[data-theme="dark"] .critical-card {
+            background: #3a0d0d;
+            box-shadow: 0 0 0 1px #ff3b3b inset;
+         }
+         .critical-card .label {
+            color: #ff0000;
+            font-weight: 900;
+         }
+         .critical-card .value {
+            color: #ff0000;
+            font-weight: 900;
+         }
+         :root[data-theme="dark"] .critical-card .label,
+         :root[data-theme="dark"] .critical-card .value {
+            color: #ff3b3b;
+         }
+         .critical-panel {
+            border: 3px solid #ff0000;
+         }
+         :root[data-theme="dark"] .critical-panel {
+            border-color: #ff3b3b;
+         }
+         .critical-panel h3 {
+            color: #ff0000;
+            font-weight: 900;
+            text-transform: uppercase;
+         }
+         :root[data-theme="dark"] .critical-panel h3 {
+            color: #ff3b3b;
+         }
+         .critical-count {
+            color: #ff0000 !important;
+            font-weight: 900 !important;
+         }
+         :root[data-theme="dark"] .critical-count {
+            color: #ff3b3b !important;
+         }
          .panel h3 {
             color: var(--n);
             font-size: 15px;
@@ -293,7 +335,7 @@
             <div class="toprow">
                <div>
                   <h1>Service Department Dashboard</h1>
-                  <p>Work In Process • Aged Service ROs • Backordered Parts • Uptime Assist • Upcoming PRI Appointments • Missed Opportunities</p>
+                  <p>Work In Process • Closed ROs with Parts • Aged Service ROs • Backordered Parts • Uptime Assist • Upcoming PRI Appointments • Missed Opportunities</p>
                </div>
                <div style="display: flex; align-items: center; gap: 10px">
                   <div class="stamp">
@@ -337,6 +379,42 @@
                   <div class="label">Work In Process</div>
                   <div class="value" id="WorkInProcess">—</div>
                   <div class="detail good"></div>
+               </div>
+               <div class="card critical-card">
+                  <div class="label">Closed ROs with Parts</div>
+                  <div class="value" id="closedRoWithPartsCount">—</div>
+                  <div class="detail">Critical — parts still attached to a closed RO</div>
+               </div>
+            </div>
+         </section>
+         <section class="section">
+            <h2>Closed ROs with Parts</h2>
+            <p class="note">Critical — ROs closed while parts remain open. Source: ClosedROswithParts worksheet.</p>
+            <div class="panel critical-panel">
+               <h3>Needs immediate attention</h3>
+               <p class="sub">Sorted as reported.</p>
+               <div class="metrics" style="margin-bottom: 14px">
+                  <div class="metric">
+                     <span>Closed ROs with open parts</span
+                     ><strong class="critical-count" id="closedRoWithPartsCountDetail">—</strong>
+                  </div>
+               </div>
+               <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
+                  <table>
+                     <thead>
+                        <tr>
+                           <th>RO</th>
+                           <th>Close Date</th>
+                           <th>Status</th>
+                           <th>Customer</th>
+                        </tr>
+                     </thead>
+                     <tbody id="closedRoWithPartsQueue">
+                        <tr>
+                           <td colspan="4" class="muted">Loading closed ROs with parts data…</td>
+                        </tr>
+                     </tbody>
+                  </table>
                </div>
             </div>
          </section>
@@ -561,6 +639,10 @@
          // Missed opportunities — recommended services declined or not sold.
          // Manually maintained — see note above.
          const MISSED_OPPORTUNITIES_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=1553069819";
+
+         // Closed ROs that still have parts attached — critical, needs
+         // immediate attention. Sheet tab: ClosedROswithParts.
+         const CLOSED_RO_WITH_PARTS_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=1434872996";
 
          // How often to automatically re-pull the CSV, in milliseconds.
          // 300000 = 5 minutes. Set to 0 to disable auto-refresh (manual button only).
@@ -1117,6 +1199,29 @@
             );
          }
 
+         const CLOSED_RO_WITH_PARTS_COLUMNS = [
+            { fields: ["RO", "RO Number", "RONumber"] },
+            { fields: ["Close Date", "CloseDate"] },
+            { fields: ["Status"] },
+            { fields: ["Customer"] },
+         ];
+
+         async function loadClosedRoWithPartsCsv() {
+            await loadCsvList(
+               CLOSED_RO_WITH_PARTS_CSV_PATH,
+               "closedRoWithPartsQueue",
+               CLOSED_RO_WITH_PARTS_COLUMNS,
+               "No closed ROs currently have parts attached.",
+               "closedRoWithPartsCount",
+            );
+
+            const count = document.getElementById("closedRoWithPartsCount");
+            setValue(
+               "closedRoWithPartsCountDetail",
+               count ? count.textContent : "—",
+            );
+         }
+
          // ==========================================
          // STARTUP
          // ==========================================
@@ -1131,6 +1236,7 @@
             try {
                await Promise.all([
                   loadKpiCsv(),
+                  loadClosedRoWithPartsCsv(),
                   loadAgedRoCsv(),
                   loadBackorderedPartsCsv(),
                   loadUptimeAssistCsv(),

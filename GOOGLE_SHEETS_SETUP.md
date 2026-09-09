@@ -149,6 +149,18 @@ One row per backordered part. Every row shown as-is, no filtering.
 | `Part Number` (Part #) |
 | `Status` |
 
+### Closed ROs with Parts — `CLOSED_RO_WITH_PARTS_CSV_PATH` (`service-department.html`)
+
+Sheet tab: `ClosedROswithParts`. Critical list — ROs closed while parts
+remain attached. Every row shown as-is, no filtering.
+
+| Column |
+|---|
+| `RO` (RO Number) |
+| `Close Date` |
+| `Status` |
+| `Customer` |
+
 ### Missed Opportunities — `MISSED_OPPORTUNITIES_CSV_PATH` (`service-department.html`)
 
 One row per service advisor. Every row shown as-is, no filtering.
