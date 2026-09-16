@@ -266,11 +266,22 @@ this is a starting point, not a drop-in fit for every spreadsheet layout.
 
 ## Where the URLs live in code
 
-- `index.html`: `CSV_PATH`, `AGING_CSV_PATH`, `OPEN_POS_CSV_PATH` (in the `CONFIG` section of the `<script>`)
-- `service-department.html`: `CSV_PATH`, `AGED_RO_CSV_PATH`, `BACKORDERED_PARTS_CSV_PATH`,
-  `UPTIME_ASSIST_CSV_PATH`, `UPCOMING_PRI_CSV_PATH`, `MISSED_OPPORTUNITIES_CSV_PATH` (same `CONFIG` section)
-- `trend-analysis.html`: `TREND_CSV_PATH` (same `CONFIG` section)
+The dashboard is a single app now (`index.html` + `app.js`) — Parts, Service,
+Returns, and Trends are all views inside it rather than separate pages.
+Every feed constant lives together in the `CONFIG` block at the top of
+`index.html`'s inline `<script>`:
+
+`CSV_PATH`, `AGING_CSV_PATH`, `OPEN_POS_CSV_PATH`, `AGED_RO_CSV_PATH`,
+`BACKORDERED_PARTS_CSV_PATH`, `UPTIME_ASSIST_CSV_PATH`,
+`UPCOMING_PRI_CSV_PATH`, `MISSED_OPPORTUNITIES_CSV_PATH`,
+`CLOSED_RO_WITH_PARTS_CSV_PATH`, `TREND_CSV_PATH`, `CLAIMS_CSV_PATH`
 
 Until each constant is swapped to a published Google Sheets link, it keeps
 pointing at the existing GitHub CSV snapshot, so the dashboard keeps
 working while you migrate feeds one at a time.
+
+`service-department.html`, `part-returns.html`, and `trend-analysis.html`
+still exist as redirect stubs (for anyone with the old links bookmarked) —
+they immediately forward to `index.html#/daily/service/overview`,
+`index.html#/returns`, and `index.html#/trends`. All of the actual logic
+now lives in `app.js`.

@@ -4,7 +4,7 @@
    <head>
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width,initial-scale=1" />
-      <title>Dealertrack Parts Dashboard</title>
+      <title>Junge Parts &amp; Service Dashboard</title>
       <script>
          (function () {
             var stored = localStorage.getItem("kpiDashboardTheme");
@@ -35,6 +35,15 @@
             --badge: #fff2dc;
             --badge-good: #e5f5eb;
             --badge-bad: #fbe7e7;
+            --shadow-sm: 0 2px 8px #17324d0a;
+            --shadow-md: 0 6px 20px #17324d1a;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --rail-bg: #0d2338;
+            --rail-fg: #93aec4;
+            --rail-fg-active: #eaf3fb;
+            --rail-active-bg: #1a3e60;
          }
          :root[data-theme="dark"] {
             --n: #e7edf5;
@@ -53,6 +62,12 @@
             --badge: #3a2f14;
             --badge-good: #12301d;
             --badge-bad: #351616;
+            --shadow-sm: 0 0 0 1px var(--border);
+            --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.5);
+            --rail-bg: #0a1219;
+            --rail-fg: #6d8598;
+            --rail-fg-active: #eaf3fb;
+            --rail-active-bg: #1c3b57;
          }
          * {
             box-sizing: border-box;
@@ -69,148 +84,14 @@
                background-color 0.2s ease,
                color 0.2s ease;
          }
-         .shell {
-            max-width: 1500px;
-            margin: auto;
+         a {
+            color: var(--b);
          }
-         .top {
-            background: linear-gradient(120deg, #102a43, #1a5b91);
-            color: #fff;
-            padding: 26px 32px;
-         }
-         .toprow {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            align-items: center;
-         }
-         .top h1 {
-            margin: 0 0 6px;
-            font-size: 28px;
-         }
-         .top p {
-            margin: 0;
-            color: #d5e8f7;
-         }
-         .stamp {
-            background: #ffffff1d;
-            border: 1px solid #ffffff36;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 12px;
-         }
-         .theme-toggle {
-            background: #ffffff1d;
-            border: 1px solid #ffffff36;
-            color: #fff;
-            border-radius: 8px;
-            padding: 10px 12px;
-            font-size: 16px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-         }
-         .theme-toggle:hover {
-            background: #ffffff33;
-         }
-         .filters {
-            background: var(--surface);
-            padding: 14px 32px;
-            border-bottom: 1px solid var(--l);
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-         }
-         .filters label {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--s);
-         }
-         select,
-         button,
-         input {
-            padding: 8px;
-            border: 1px solid var(--l);
-            border-radius: 6px;
-            background: var(--surface);
-            color: var(--text);
-         }
-         button {
-            background: var(--b);
-            border-color: var(--b);
-            color: #fff;
-            font-weight: 700;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-         }
-         button.loading {
-            cursor: default;
-            opacity: 0.8;
-         }
-         .btn-spinner {
-            display: none;
-            width: 12px;
-            height: 12px;
-            border: 2px solid rgba(255, 255, 255, 0.45);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-         }
-         button.loading .btn-spinner {
-            display: inline-block;
-         }
-         @keyframes spin {
-            to {
-               transform: rotate(360deg);
-            }
-         }
-         .section {
-            padding: 24px 32px 0;
-         }
-         .section h2 {
-            color: var(--n);
-            font-size: 18px;
-            margin: 0 0 8px;
-         }
+         .muted,
          .note,
-         .sub,
-         .muted {
+         .sub {
             color: var(--s);
             font-size: 12px;
-         }
-         .grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(200px, 1fr));
-            gap: 14px;
-         }
-         .card,
-         .panel {
-            background: var(--surface);
-            border: 1px solid var(--l);
-            border-radius: 10px;
-            padding: 17px;
-            box-shadow: 0 2px 8px #17324d0a;
-         }
-         .label {
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--s);
-            font-weight: 700;
-            font-size: 11px;
-         }
-         .value {
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--n);
-            margin: 9px 0 5px;
-         }
-         .detail {
-            font-size: 12px;
-            color: var(--s);
          }
          .good {
             color: var(--g);
@@ -221,58 +102,491 @@
          .bad {
             color: var(--r);
          }
-         .twocol {
+
+         /* ============ App shell layout ============ */
+         .app {
             display: grid;
-            grid-template-columns: 1.25fr 0.75fr;
+            grid-template-columns: 64px minmax(0, 1fr);
+            min-height: 100vh;
+         }
+         .rail {
+            background: var(--rail-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 14px 0 16px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+         }
+         .rail-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            background: var(--rail-active-bg);
+            color: var(--rail-fg-active);
+            font-weight: 800;
+            font-size: 11px;
+            margin-bottom: 12px;
+            flex: none;
+         }
+         .rail-btn {
+            width: 48px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 9px 0 7px;
+            border: 0;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            color: var(--rail-fg);
+            cursor: pointer;
+            font: inherit;
+         }
+         .rail-btn svg {
+            width: 20px;
+            height: 20px;
+         }
+         .rail-btn span {
+            font-size: 9px;
+            letter-spacing: 0.03em;
+         }
+         .rail-btn:hover {
+            color: var(--rail-fg-active);
+         }
+         .rail-btn.active {
+            background: var(--rail-active-bg);
+            color: var(--rail-fg-active);
+         }
+         .rail-spacer {
+            flex: 1;
+         }
+         .rail-bottom-btn {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            border: 0;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            color: var(--rail-fg);
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+         }
+         .rail-bottom-btn:hover {
+            color: var(--rail-fg-active);
+            background: var(--rail-active-bg);
+         }
+
+         .main {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+         }
+
+         .appbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--surface);
+            box-shadow: 0 1px 0 var(--border);
+         }
+         .appbar-row {
+            display: flex;
+            align-items: center;
             gap: 14px;
-            padding-bottom: 24px;
+            flex-wrap: wrap;
+            padding: 15px 24px 11px;
+         }
+         .appbar-title-wrap {
+            margin-right: auto;
+            min-width: 0;
+         }
+         .appbar-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--n);
+            line-height: 1.2;
+         }
+         .appbar-meta {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 11px;
+            color: var(--s);
+            margin-top: 3px;
+            flex-wrap: wrap;
+         }
+         .appbar-meta .sep {
+            opacity: 0.5;
+         }
+         .appbar-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+         }
+         .appbar-controls[hidden] {
+            display: none;
+         }
+
+         .tabbar {
+            display: flex;
+            gap: 2px;
+            padding: 0 20px;
+            overflow-x: auto;
+         }
+         .tabbar-btn {
+            cursor: pointer;
+            background: transparent;
+            border: 0;
+            padding: 9px 12px 10px;
+            font-weight: 700;
+            font-size: 13px;
+            white-space: nowrap;
+            color: var(--s);
+            box-shadow: inset 0 -2px 0 transparent;
+            font-family: inherit;
+         }
+         .tabbar-btn.active {
+            color: var(--b);
+            box-shadow: inset 0 -2px 0 var(--b);
+         }
+
+         /* ============ Controls ============ */
+         select,
+         input[type="text"],
+         input[type="password"] {
+            padding: 8px 10px;
+            border: 1px solid var(--l);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 13px;
+         }
+         .btn {
+            padding: 9px 14px;
+            border: 1px solid var(--b);
+            border-radius: var(--radius-sm);
+            background: var(--b);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+            font-family: inherit;
+         }
+         .btn:hover {
+            filter: brightness(1.06);
+         }
+         .btn.loading {
+            cursor: default;
+            opacity: 0.8;
+         }
+         .btn-secondary {
+            background: var(--surface);
+            color: var(--text);
+            border-color: var(--l);
+         }
+         .btn svg {
+            width: 14px;
+            height: 14px;
+         }
+         .btn .btn-spin {
+            display: none;
+         }
+         .btn.loading .btn-spin {
+            display: inline-flex;
+            animation: appspin 0.8s linear infinite;
+         }
+         @keyframes appspin {
+            to {
+               transform: rotate(360deg);
+            }
+         }
+
+         .seg {
+            display: flex;
+            border: 1px solid var(--l);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+         }
+         .seg-opt {
+            position: relative;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--s);
+            padding: 8px 13px;
+            cursor: pointer;
+            background: var(--surface);
+         }
+         .seg-opt input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+         }
+         .seg-opt.checked {
+            background: var(--b);
+            color: #fff;
+         }
+         .seg-opt + .seg-opt {
+            border-left: 1px solid var(--l);
+         }
+
+         /* ============ Views ============ */
+         .view[hidden],
+         [hidden] {
+            display: none !important;
+         }
+         .view-body {
+            padding: 18px 24px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            max-width: 1400px;
+         }
+
+         .hero {
+            display: grid;
+            grid-template-columns: 108px repeat(auto-fit, minmax(200px, 1fr));
+            gap: 9px;
+            align-items: stretch;
+         }
+         .hero-count {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-right: 12px;
+         }
+         .hero-count strong {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--n);
+            line-height: 1;
+         }
+         .hero-count span {
+            font-size: 10px;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: var(--s);
+            margin-top: 4px;
+            display: block;
+         }
+         .hero-card {
+            text-align: left;
+            cursor: pointer;
+            background: var(--surface-alt);
+            border: 0;
+            border-left: 3px solid var(--a);
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            padding: 11px 14px;
+            color: inherit;
+            font-family: inherit;
+            box-shadow: var(--shadow-sm);
+         }
+         .hero-card:hover {
+            box-shadow: var(--shadow-md);
+         }
+         .hero-card.tone-bad {
+            border-left-color: var(--r);
+         }
+         .hero-kicker {
+            font-size: 10px;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: var(--a);
+         }
+         .hero-card.tone-bad .hero-kicker {
+            color: var(--r);
+         }
+         .hero-title {
+            font-weight: 800;
+            font-size: 15px;
+            margin-top: 3px;
+            color: var(--n);
+         }
+         .hero-sub {
+            font-size: 12px;
+            color: var(--s);
+            margin-top: 1px;
+         }
+         .hero-empty {
+            grid-column: 2 / -1;
+            display: flex;
+            align-items: center;
+            padding: 0 14px;
+            color: var(--s);
+            font-size: 13px;
+            background: var(--surface-alt);
+            border-radius: var(--radius-md);
+         }
+
+         .subhead {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            margin-bottom: 9px;
+            flex-wrap: wrap;
+         }
+         .subhead h3 {
+            margin: 0;
+            font-size: 15px;
+            color: var(--n);
+         }
+         .subhead span {
+            font-size: 11px;
+            color: var(--s);
+         }
+
+         .tile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+         }
+         .tile {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            text-align: left;
+            cursor: pointer;
+            background: var(--surface);
+            border: 1px solid var(--l);
+            border-radius: var(--radius-md);
+            padding: 13px;
+            color: inherit;
+            font-family: inherit;
+            box-shadow: var(--shadow-sm);
+         }
+         .tile:hover {
+            box-shadow: var(--shadow-md);
+         }
+         .tile-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: var(--s);
+         }
+         .tile-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--b);
+            flex: none;
+         }
+         .tile-dot.g {
+            background: var(--g);
+         }
+         .tile-dot.a {
+            background: var(--a);
+         }
+         .tile-dot.r {
+            background: var(--r);
+         }
+         .tile-dot.s {
+            background: var(--s);
+         }
+         .tile-value {
+            font-size: 25px;
+            font-weight: 800;
+            color: var(--n);
+            font-variant-numeric: tabular-nums;
+         }
+         .tile-note {
+            font-size: 11px;
+            color: var(--s);
+         }
+
+         .two-col {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 16px;
+            align-items: start;
+         }
+         @media (max-width: 860px) {
+            .two-col {
+               grid-template-columns: 1fr;
+            }
+         }
+
+         .panel,
+         .card {
+            background: var(--surface);
+            border: 1px solid var(--l);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
          }
          .panel h3 {
             color: var(--n);
             font-size: 15px;
             margin: 0 0 4px;
          }
-         .bars {
-            display: grid;
-            gap: 24px;
-            margin-top: 20px;
-         }
-         .barrow {
-            display: grid;
-            gap: 10px;
-         }
-         .barrow-label {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--n);
-         }
-         .barrow-label strong {
-            font-size: 20px;
-            font-weight: 800;
-         }
-         .track {
-            height: 28px;
-            background: var(--track);
-            border-radius: 99px;
+
+         .queue {
+            background: var(--surface);
+            border: 1px solid var(--l);
+            border-radius: var(--radius-md);
             overflow: hidden;
+            box-shadow: var(--shadow-sm);
          }
-         .fill {
-            height: 100%;
-            background: var(--b);
-            border-radius: 99px;
+         .queue-row {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            background: transparent;
+            border: 0;
+            border-top: 1px solid var(--border);
+            padding: 11px 14px;
+            color: inherit;
+            font-family: inherit;
          }
-         .fill.g {
-            background: var(--g);
+         .queue-row:first-child {
+            border-top: 0;
          }
-         .fill.a {
-            background: var(--a);
+         .queue-row:hover {
+            background: var(--surface-alt);
          }
-         .fill.r {
-            background: var(--r);
+         .queue-count {
+            width: 32px;
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--n);
+            font-variant-numeric: tabular-nums;
+            flex: none;
          }
+         .queue-label {
+            flex: 1;
+            min-width: 0;
+            font-size: 13px;
+         }
+         .queue-note {
+            font-size: 11px;
+            color: var(--s);
+            white-space: nowrap;
+         }
+         .queue-caret {
+            color: var(--s);
+            flex: none;
+         }
+         .queue-empty {
+            padding: 14px;
+            color: var(--s);
+            font-size: 13px;
+         }
+
          .metrics {
             display: grid;
             gap: 8px;
@@ -286,6 +600,7 @@
          .metric:last-child {
             border: 0;
          }
+
          table {
             width: 100%;
             border-collapse: collapse;
@@ -315,18 +630,20 @@
             font-weight: 700;
             border-top: 2px solid var(--l);
          }
-         #scorecardTable th:nth-child(2),
-         #scorecardTable th:nth-child(3),
-         #scorecardTable td:nth-child(2),
-         #scorecardTable td:nth-child(3) {
-            text-align: center;
+         .table-scroll {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 420px;
+            border-radius: var(--radius-md);
          }
+
          .badge {
             border-radius: 99px;
             padding: 4px 8px;
             font-size: 10px;
             font-weight: 700;
             background: var(--badge);
+            white-space: nowrap;
          }
          .badge.good {
             background: var(--badge-good);
@@ -334,1033 +651,823 @@
          .badge.bad {
             background: var(--badge-bad);
          }
+
+         .critical-card {
+            border: 3px solid #ff0000;
+            background: #ffe5e5;
+            box-shadow: 0 0 0 1px #ff0000 inset;
+         }
+         :root[data-theme="dark"] .critical-card {
+            background: #3a0d0d;
+            box-shadow: 0 0 0 1px #ff3b3b inset;
+         }
+         .critical-card .tile-label {
+            color: #ff0000;
+            font-weight: 900;
+         }
+         .critical-card .tile-value {
+            color: #ff0000;
+            font-weight: 900;
+         }
+         :root[data-theme="dark"] .critical-card .tile-label,
+         :root[data-theme="dark"] .critical-card .tile-value {
+            color: #ff3b3b;
+         }
+         .critical-panel {
+            border: 3px solid #ff0000;
+         }
+         :root[data-theme="dark"] .critical-panel {
+            border-color: #ff3b3b;
+         }
+         .critical-panel h3 {
+            color: #ff0000;
+            font-weight: 900;
+            text-transform: uppercase;
+         }
+         :root[data-theme="dark"] .critical-panel h3 {
+            color: #ff3b3b;
+         }
+         .critical-count {
+            color: #ff0000 !important;
+            font-weight: 900 !important;
+         }
+         :root[data-theme="dark"] .critical-count {
+            color: #ff3b3b !important;
+         }
+
+         .filter-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+         }
+         .filter-row .grow {
+            margin-right: auto;
+            min-width: 0;
+         }
+         .filter-row input[type="text"] {
+            width: 240px;
+            max-width: 100%;
+         }
+
+         .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+         }
+         .tab-btn {
+            padding: 7px 12px;
+            border: 1px solid var(--l);
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            color: var(--s);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+         }
+         .tab-btn.active {
+            background: var(--b);
+            border-color: var(--b);
+            color: #fff;
+         }
+         .tab-panel.hidden {
+            display: none;
+         }
+
          .footer {
-            padding: 24px 32px;
+            padding: 20px 24px 30px;
             color: var(--s);
             font-size: 12px;
          }
-         @media (max-width: 980px) {
-            .grid {
+
+         /* ============ Gate (Returns) ============ */
+         #gate {
+            min-height: 60vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+         }
+         #gate .panel {
+            max-width: 360px;
+            width: 100%;
+            text-align: center;
+         }
+         #gate h2 {
+            color: var(--n);
+            margin: 0 0 6px;
+         }
+         #gateForm {
+            display: grid;
+            gap: 12px;
+            margin-top: 14px;
+            justify-items: center;
+         }
+         #gateError {
+            color: var(--r);
+            font-size: 12px;
+            min-height: 16px;
+         }
+
+         /* ============ Trend cards ============ */
+         .trend-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            padding-bottom: 24px;
+         }
+         .trend-card {
+            background: var(--surface);
+            border: 1px solid var(--l);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+         }
+         .trend-card h3 {
+            margin: 0 0 2px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--n);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+         }
+         .trend-headline {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            margin-bottom: 6px;
+         }
+         .trend-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--n);
+         }
+         .trend-delta {
+            font-size: 12px;
+            font-weight: 700;
+         }
+         .trend-delta.neutral {
+            color: var(--s);
+            font-weight: 600;
+         }
+         .trend-chart-wrap {
+            position: relative;
+            outline: none;
+         }
+         .trend-chart-wrap:focus-visible {
+            outline: 2px solid var(--b);
+            outline-offset: 2px;
+            border-radius: 6px;
+         }
+         .trend-svg {
+            display: block;
+            width: 100%;
+            height: auto;
+         }
+         .trend-grid-line {
+            stroke: var(--border);
+            stroke-width: 1;
+         }
+         .trend-axis {
+            stroke: var(--l);
+            stroke-width: 1;
+         }
+         .trend-axis-label {
+            fill: var(--s);
+            font-size: 9px;
+         }
+         .trend-end-label {
+            fill: var(--n);
+            font-size: 10px;
+            font-weight: 700;
+         }
+         .trend-crosshair {
+            stroke: var(--s);
+            stroke-width: 1;
+         }
+         .trend-b {
+            stroke: var(--b);
+            fill: var(--b);
+         }
+         .trend-g {
+            stroke: var(--g);
+            fill: var(--g);
+         }
+         .trend-a {
+            stroke: var(--a);
+            fill: var(--a);
+         }
+         .trend-r {
+            stroke: var(--r);
+            fill: var(--r);
+         }
+         .trend-line {
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+         }
+         .trend-end {
+            stroke: var(--surface);
+            stroke-width: 2;
+         }
+         .trend-hover-dot {
+            stroke: var(--surface);
+            stroke-width: 2;
+         }
+         .trend-hit {
+            fill: transparent;
+         }
+         .trend-tooltip {
+            position: absolute;
+            pointer-events: none;
+            background: var(--surface);
+            border: 1px solid var(--l);
+            border-radius: 6px;
+            padding: 6px 9px;
+            font-size: 11px;
+            box-shadow: var(--shadow-md);
+            white-space: nowrap;
+            transform: translate(-50%, -110%);
+            z-index: 5;
+         }
+         .trend-tooltip .tt-value {
+            font-weight: 800;
+            color: var(--n);
+            font-size: 13px;
+         }
+         .trend-tooltip .tt-date {
+            color: var(--s);
+         }
+         .trend-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--s);
+         }
+         .setup-callout {
+            background: var(--surface);
+            border: 1px solid var(--l);
+            border-left: 4px solid var(--a);
+            border-radius: var(--radius-md);
+            padding: 20px 22px;
+            margin-bottom: 24px;
+         }
+         .setup-callout h3 {
+            margin: 0 0 8px;
+            color: var(--n);
+            font-size: 16px;
+         }
+         .setup-callout p {
+            margin: 6px 0;
+            font-size: 13px;
+            color: var(--text);
+         }
+         .setup-callout code {
+            background: var(--surface-alt);
+            border-radius: 4px;
+            padding: 2px 5px;
+            font-size: 12px;
+         }
+         .setup-callout pre {
+            background: var(--surface-alt);
+            border-radius: 6px;
+            padding: 10px 12px;
+            overflow-x: auto;
+            font-size: 12px;
+         }
+         details.data-table-details summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--n);
+            padding: 10px 0;
+         }
+
+         @media (max-width: 1180px) {
+            .trend-grid {
                grid-template-columns: repeat(2, 1fr);
             }
-            .twocol {
+         }
+         @media (max-width: 720px) {
+            .trend-grid {
                grid-template-columns: 1fr;
-            }
-            .toprow {
-               flex-direction: column;
-               align-items: flex-start;
             }
          }
          @media (max-width: 560px) {
-            .section,
-            .top,
-            .filters,
+            .view-body,
+            .appbar-row,
+            .tabbar,
             .footer {
-               padding-left: 16px;
-               padding-right: 16px;
-            }
-            .grid {
-               grid-template-columns: 1fr;
+               padding-left: 14px;
+               padding-right: 14px;
             }
          }
       </style>
    </head>
    <body>
-      <div class="shell">
-         <header class="top">
-            <div class="toprow">
-               <div>
-                  <h1>DealerTrack Parts Daily Dashboard</h1>
-                  <p>
-                     Demand Fill • Inventory Aging • Sales &amp; GP • Price
-                     Overrides • Unrealized Sales • Aged ROs
-                  </p>
-               </div>
-               <div style="display: flex; align-items: center; gap: 10px">
-                  <div class="stamp">
-                     Reporting date: <strong id="date">Today</strong><br />Updated:
-                     <span id="updated"></span>
+      <div class="app">
+         <nav class="rail">
+            <div class="rail-logo">JP</div>
+            <button type="button" class="rail-btn" data-nav="daily" title="Daily dashboard">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 15a8 8 0 1 1 16 0" stroke-linecap="round"/><path d="M12 15l4-5" stroke-linecap="round"/><circle cx="12" cy="15" r="1.2" fill="currentColor" stroke="none"/></svg>
+               <span>Daily</span>
+            </button>
+            <button type="button" class="rail-btn" data-nav="returns" title="Part return claims">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10L4 15L9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
+               <span>Returns</span>
+            </button>
+            <button type="button" class="rail-btn" data-nav="trends" title="Trend analysis">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+               <span>Trends</span>
+            </button>
+            <div class="rail-spacer"></div>
+            <button
+               id="themeToggle"
+               class="rail-bottom-btn"
+               type="button"
+               onclick="toggleTheme()"
+               aria-label="Toggle dark mode"
+            >
+               <span id="themeToggleIcon">🌙</span>
+            </button>
+         </nav>
+
+         <div class="main">
+            <header class="appbar">
+               <div class="appbar-row">
+                  <div class="appbar-title-wrap">
+                     <div class="appbar-title" id="appTitle">Parts Daily</div>
+                     <div class="appbar-meta" id="appMeta">
+                        <span id="appMetaLine">—</span>
+                     </div>
                   </div>
-                  <button
-                     id="themeToggle"
-                     class="theme-toggle"
-                     type="button"
-                     onclick="toggleTheme()"
-                     aria-label="Toggle dark mode"
-                  >
-                     <span id="themeToggleIcon">🌙</span>
-                  </button>
+
+                  <div class="appbar-controls" id="dailyControls">
+                     <label class="sub"
+                        >Location
+                        <select>
+                           <option>Junge North Liberty</option>
+                        </select></label
+                     >
+                     <div class="seg" role="group" aria-label="Department">
+                        <label class="seg-opt" id="segParts"
+                           ><input type="radio" name="dept" value="parts" checked />Parts</label
+                        ><label class="seg-opt" id="segService"
+                           ><input type="radio" name="dept" value="service" />Service</label
+                        >
+                     </div>
+                     <button id="refreshBtn" class="btn" type="button" onclick="refreshDailyData()">
+                        <span class="btn-spin" aria-hidden="true">
+                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+                        </span>
+                        <span id="refreshBtnLabel">Refresh KPI Data</span>
+                     </button>
+                  </div>
+
+                  <div class="appbar-controls" id="returnsControls" hidden>
+                     <a href="#" id="lockLink">Lock this page</a>
+                  </div>
+
+                  <div class="appbar-controls" id="trendsControls" hidden>
+                     <label class="sub"
+                        >Date range
+                        <select id="rangeSelect">
+                           <option value="30">Last 30 days</option>
+                           <option value="90" selected>Last 90 days</option>
+                           <option value="180">Last 6 months</option>
+                           <option value="365">Last 12 months</option>
+                           <option value="all">All time</option>
+                        </select></label
+                     >
+                     <button id="trendRefreshBtn" class="btn" type="button" onclick="refreshTrendData()">
+                        <span class="btn-spin" aria-hidden="true">
+                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+                        </span>
+                        <span>Refresh Trend Data</span>
+                     </button>
+                  </div>
+               </div>
+
+               <div class="tabbar" id="partsTabs">
+                  <button type="button" class="tabbar-btn" data-tab="overview">Overview</button>
+                  <button type="button" class="tabbar-btn" data-tab="demand">Demand fill</button>
+                  <button type="button" class="tabbar-btn" data-tab="inventory">Inventory</button>
+                  <button type="button" class="tabbar-btn" data-tab="sales">Sales &amp; GP</button>
+                  <button type="button" class="tabbar-btn" data-tab="pos">Purchase orders</button>
+               </div>
+               <div class="tabbar" id="svcTabs" hidden>
+                  <button type="button" class="tabbar-btn" data-tab="overview">Overview</button>
+                  <button type="button" class="tabbar-btn" data-tab="closed">Closed ROs w/ parts</button>
+                  <button type="button" class="tabbar-btn" data-tab="aged">Aged ROs</button>
+                  <button type="button" class="tabbar-btn" data-tab="backorder">Backordered parts</button>
+                  <button type="button" class="tabbar-btn" data-tab="uptime">Uptime Assist</button>
+                  <button type="button" class="tabbar-btn" data-tab="pri">Upcoming PRI</button>
+                  <button type="button" class="tabbar-btn" data-tab="missed">Missed opportunities</button>
+               </div>
+            </header>
+
+            <!-- ================= DAILY ================= -->
+            <div class="view" id="dailyView">
+               <div class="view" id="partsViews">
+
+                  <section class="view-body view" id="view-parts-overview">
+                     <div class="hero" id="partsHero"></div>
+
+                     <section>
+                        <div class="subhead"><h3>Today at a glance</h3><span>Click a tile for the source report</span></div>
+                        <div class="tile-grid">
+                           <button type="button" class="tile" data-jump="parts:demand">
+                              <div class="tile-label"><span class="tile-dot"></span>Shelf fill rate</div>
+                              <div class="tile-value" id="DemandFillRate">—</div>
+                              <div class="tile-note">Target 95.0% · Month to date</div>
+                           </button>
+                           <button type="button" class="tile" data-jump="parts:sales">
+                              <div class="tile-label"><span class="tile-dot g"></span>Gross profit %</div>
+                              <div class="tile-value" id="GrossProfitPercent">—</div>
+                              <div class="tile-note">Target 40.0% · Month to date</div>
+                           </button>
+                           <button type="button" class="tile" data-jump="parts:sales">
+                              <div class="tile-label"><span class="tile-dot g"></span>Parts sales</div>
+                              <div class="tile-value" id="PartsSalesToday">—</div>
+                              <div class="tile-note" id="PartsSalesTodayNote">Previous day</div>
+                           </button>
+                           <button type="button" class="tile" data-jump="parts:inventory">
+                              <div class="tile-label"><span class="tile-dot s"></span>Inventory on hand</div>
+                              <div class="tile-value" id="InventoryOnHand">—</div>
+                              <div class="tile-note">Current day</div>
+                           </button>
+                           <button type="button" class="tile" data-jump="parts:sales">
+                              <div class="tile-label"><span class="tile-dot"></span>Unrealized sales</div>
+                              <div class="tile-value" id="UnrealizedSales">—</div>
+                              <div class="tile-note">Current day</div>
+                           </button>
+                           <button type="button" class="tile" data-jump="parts:sales">
+                              <div class="tile-label"><span class="tile-dot s"></span>Price overrides</div>
+                              <div class="tile-value" id="OverrideLines">—</div>
+                              <div class="tile-note">Previous day</div>
+                           </button>
+                        </div>
+                     </section>
+
+                     <section class="two-col">
+                        <div>
+                           <div class="subhead"><h3>Action queue</h3><span>Daily exceptions</span></div>
+                           <div class="queue" id="partsQueue"></div>
+                        </div>
+                        <div>
+                           <div class="subhead"><h3>Scorecard</h3><span>Against daily targets</span></div>
+                           <div class="panel" style="padding: 4px 13px 9px">
+                              <table id="scorecardTable">
+                                 <thead>
+                                    <tr>
+                                       <th>Metric</th>
+                                       <th style="text-align: right">Current</th>
+                                       <th style="text-align: right">Target</th>
+                                       <th style="text-align: right">Status</th>
+                                    </tr>
+                                 </thead>
+                                 <tbody id="scorecardBody"></tbody>
+                              </table>
+                           </div>
+                        </div>
+                     </section>
+                  </section>
+
+                  <section class="view-body view" id="view-parts-demand" hidden>
+                     <div class="subhead"><h3>Demand fill analysis</h3><span>DealerTrack daily demand fill report · month to date</span></div>
+                     <div class="tile-grid">
+                        <div class="card"><div class="tile-label">Shelf fill rate</div><div class="tile-value" id="DemandFillRate2">—</div><div class="tile-note">Target 95.0%</div></div>
+                        <div class="card"><div class="tile-label">Gross profit %</div><div class="tile-value" id="GrossProfitPercent2">—</div><div class="tile-note">Target 40.0%</div></div>
+                        <div class="card"><div class="tile-label">Lost sales</div><div class="tile-value" id="LostSales">—</div><div class="tile-note">Month to date</div></div>
+                        <div class="card"><div class="tile-label">Backorder lines</div><div class="tile-value" id="BackorderLines">—</div><div class="tile-note">Current day</div></div>
+                     </div>
+                  </section>
+
+                  <section class="view-body view" id="view-parts-inventory" hidden>
+                     <div class="subhead"><h3>Inventory aging</h3><span>DealerTrack stock status / aging report · current day</span></div>
+                     <div class="tile-grid">
+                        <div class="card"><div class="tile-label">On hand</div><div class="tile-value" id="InventoryOnHand2">—</div></div>
+                        <div class="card"><div class="tile-label">Obsolescence</div><div class="tile-value" id="Obsolescence">—</div><div class="tile-note">Target 3.0%</div></div>
+                        <div class="card"><div class="tile-label">Excess</div><div class="tile-value" id="ExcessInventory">—</div></div>
+                        <div class="card"><div class="tile-label">Months supply</div><div class="tile-value" id="MonthsSupply">—</div><div class="tile-note">Ceiling 1.5</div></div>
+                     </div>
+                     <div class="panel">
+                        <h3 style="font-size: 13px; margin-bottom: 11px">Aging by value</h3>
+                        <p class="sub" style="margin: -8px 0 11px">Use DealerTrack aging buckets to target returns or liquidation.</p>
+                        <div style="display: flex; flex-direction: column; gap: 12px">
+                           <div style="display: flex; align-items: center; gap: 11px">
+                              <span style="width: 96px; flex: none; font-size: 12px; color: var(--s)">6–11 months</span>
+                              <span style="flex: 1; height: 10px; border-radius: 5px; background: var(--track); overflow: hidden"
+                                 ><span id="fillAging6to11" style="display: block; height: 100%; width: 0%; background: var(--a)"></span
+                              ></span>
+                              <span style="width: 76px; flex: none; text-align: right; font-size: 13px; font-variant-numeric: tabular-nums" id="valAging6to11">—</span>
+                           </div>
+                           <div style="display: flex; align-items: center; gap: 11px">
+                              <span style="width: 96px; flex: none; font-size: 12px; color: var(--s)">12+ months</span>
+                              <span style="flex: 1; height: 10px; border-radius: 5px; background: var(--track); overflow: hidden"
+                                 ><span id="fillAging12plus" style="display: block; height: 100%; width: 0%; background: var(--r)"></span
+                              ></span>
+                              <span style="width: 76px; flex: none; text-align: right; font-size: 13px; font-variant-numeric: tabular-nums" id="valAging12plus">—</span>
+                           </div>
+                        </div>
+                     </div>
+                  </section>
+
+                  <section class="view-body view" id="view-parts-sales" hidden>
+                     <div class="subhead"><h3>Sales, overrides &amp; unrealized</h3><span>DealerTrack daily sales analysis, price override audit &amp; unrealized sales</span></div>
+                     <div class="tile-grid">
+                        <div class="card"><div class="tile-label" id="PartsSalesTodayLabel">Parts sales today</div><div class="tile-value" id="PartsSalesToday2">—</div><div class="tile-note">Previous day</div></div>
+                        <div class="card"><div class="tile-label" id="GrossProfitTodayLabel">Gross profit today</div><div class="tile-value" id="GrossProfitToday">—</div><div class="tile-note">Previous day</div></div>
+                        <div class="card"><div class="tile-label">Override lines</div><div class="tile-value" id="OverrideLines2">—</div><div class="tile-note">Previous day</div></div>
+                        <div class="card"><div class="tile-label">Override GP impact</div><div class="tile-value" id="OverrideGPImpact">—</div><div class="tile-note">Lost gross at final sale</div></div>
+                        <div class="card"><div class="tile-label">Unrealized sales</div><div class="tile-value" id="UnrealizedSales2">—</div><div class="tile-note">Current day</div></div>
+                        <div class="card"><div class="tile-label">Unrealized GP</div><div class="tile-value" id="UnrealizedGP">—</div><div class="tile-note">Estimated missed gross</div></div>
+                        <div class="card"><div class="tile-label" id="InternalSalesLabel">Internal sales today</div><div class="tile-value" id="InternalSales">—</div><div class="tile-note">Previous day</div></div>
+                        <div class="card"><div class="tile-label">Sales by EP</div><div class="tile-value" id="SalesByEP">—</div><div class="tile-note">Month to date</div></div>
+                     </div>
+                  </section>
+
+                  <section class="view-body view" id="view-parts-pos" hidden>
+                     <div class="filter-row">
+                        <div class="grow">
+                           <h3 style="margin: 0 0 2px; font-size: 15px; color: var(--n)">Open purchase orders</h3>
+                           <div class="sub" id="openPosSummary">— open</div>
+                        </div>
+                        <input type="text" id="posFilter" placeholder="Filter PO, vendor or account" />
+                     </div>
+                     <div class="panel" style="padding: 4px 13px 9px">
+                        <div class="table-scroll">
+                           <table>
+                              <thead>
+                                 <tr>
+                                    <th>PO #</th>
+                                    <th>Order Date</th>
+                                    <th>Vendor</th>
+                                    <th>Name</th>
+                                    <th>User</th>
+                                    <th>Control</th>
+                                    <th>Account</th>
+                                    <th style="text-align: right">Amount</th>
+                                 </tr>
+                              </thead>
+                              <tbody id="openPosQueue">
+                                 <tr><td colspan="8" class="muted">Loading open PO data…</td></tr>
+                              </tbody>
+                              <tfoot>
+                                 <tr><td colspan="7">Total</td><td class="num" id="openPosTotal">—</td></tr>
+                              </tfoot>
+                           </table>
+                        </div>
+                     </div>
+                  </section>
+               </div>
+
+               <div class="view" id="svcViews" hidden>
+
+                  <section class="view-body view" id="view-svc-overview" hidden>
+                     <div class="hero" id="svcHero"></div>
+
+                     <section>
+                        <div class="subhead"><h3>Today at a glance</h3><span>Click a tile for the source report</span></div>
+                        <div class="tile-grid">
+                           <div class="card"><div class="tile-label">Work in process</div><div class="tile-value" id="WorkInProcess">—</div></div>
+                           <button type="button" class="tile" data-jump="service:closed">
+                              <div class="tile-label"><span class="tile-dot r"></span>Closed w/ open parts</div>
+                              <div class="tile-value" id="closedRoWithPartsCount">—</div>
+                              <div class="tile-note" id="closedRoWithPartsNote">critical</div>
+                           </button>
+                           <button type="button" class="tile" data-jump="service:aged">
+                              <div class="tile-label"><span class="tile-dot r"></span>ROs open 10+ days</div>
+                              <div class="tile-value" id="agedRoCount">—</div>
+                              <div class="tile-note" id="agedRoNote">oldest —</div>
+                           </button>
+                           <button type="button" class="tile" data-jump="service:backorder">
+                              <div class="tile-label"><span class="tile-dot"></span>Waiting on parts</div>
+                              <div class="tile-value" id="backorderedPartsCount">—</div>
+                              <div class="tile-note">backordered ROs</div>
+                           </button>
+                        </div>
+                     </section>
+
+                     <section>
+                        <div class="subhead"><h3>Action queue</h3><span>Service follow-ups</span></div>
+                        <div class="queue" id="svcQueue" style="max-width: 620px"></div>
+                     </section>
+                  </section>
+
+                  <section class="view-body view" id="view-svc-closed" hidden>
+                     <div class="subhead"><h3>Closed ROs with parts</h3><span>Critical — ROs closed while parts remain open</span></div>
+                     <div class="panel critical-panel">
+                        <h3>Needs immediate attention</h3>
+                        <p class="sub">Sorted as reported. Source: ClosedROswithParts worksheet.</p>
+                        <div class="metrics" style="margin-bottom: 14px">
+                           <div class="metric"><span>Closed ROs with open parts</span><strong class="critical-count" id="closedRoWithPartsCountDetail">—</strong></div>
+                        </div>
+                        <div class="table-scroll">
+                           <table>
+                              <thead><tr><th>RO</th><th>Close Date</th><th>Status</th><th>Customer</th></tr></thead>
+                              <tbody id="closedRoWithPartsQueue"><tr><td colspan="4" class="muted">Loading closed ROs with parts data…</td></tr></tbody>
+                           </table>
+                        </div>
+                     </div>
+                  </section>
+
+                  <section class="view-body view" id="view-svc-aged" hidden>
+                     <div class="subhead"><h3>Aged service ROs</h3><span>Open 10+ days · oldest first</span></div>
+                     <div class="panel">
+                        <div class="metrics" style="margin-bottom: 14px">
+                           <div class="metric"><span>ROs open 10+ days</span><strong class="warn" id="agedRoCountDetail">—</strong></div>
+                        </div>
+                        <div class="table-scroll">
+                           <table>
+                              <thead><tr><th>RO</th><th>Age</th><th>Status</th><th>Description</th><th style="text-align: right">Sale</th></tr></thead>
+                              <tbody id="agedRoQueue"><tr><td colspan="5" class="muted">Loading aged RO data…</td></tr></tbody>
+                              <tfoot><tr><td colspan="4">Total</td><td class="num" id="agedRoTotal">—</td></tr></tfoot>
+                           </table>
+                        </div>
+                     </div>
+                  </section>
+
+                  <section class="view-body view" id="view-svc-backorder" hidden>
+                     <div class="subhead"><h3>Backordered parts ROs</h3><span>ROs with parts on backorder · current day</span></div>
+                     <div class="panel">
+                        <div class="metrics" style="margin-bottom: 14px">
+                           <div class="metric"><span>ROs with backordered parts</span><strong class="warn" id="backorderedPartsCountDetail">—</strong></div>
+                        </div>
+                        <div class="table-scroll">
+                           <table>
+                              <thead><tr><th>RO</th><th>Part #</th><th>Description</th><th>Status</th><th>ETA</th></tr></thead>
+                              <tbody id="backorderedPartsQueue"><tr><td colspan="5" class="muted">Loading backordered parts data…</td></tr></tbody>
+                           </table>
+                        </div>
+                     </div>
+                  </section>
+
+                  <section class="view-body view" id="view-svc-uptime" hidden>
+                     <div class="subhead"><h3>Uptime Assist</h3><span>Internal service follow-up queue</span></div>
+                     <div class="panel">
+                        <div class="metrics" style="margin-bottom: 14px">
+                           <div class="metric"><span>Open follow-ups</span><strong class="warn" id="uptimeAssistCount">—</strong></div>
+                        </div>
+                        <div class="table-scroll">
+                           <table>
+                              <thead><tr><th>RO</th><th>VIN</th><th>Open Date</th><th>Due Date</th><th>Status</th></tr></thead>
+                              <tbody id="uptimeAssistQueue"><tr><td colspan="5" class="muted">Loading Uptime Assist data…</td></tr></tbody>
+                           </table>
+                        </div>
+                     </div>
+                  </section>
+
+                  <section class="view-body view" id="view-svc-pri" hidden>
+                     <div class="subhead"><h3>Upcoming appointments with PRI parts</h3><span>Next 7 days</span></div>
+                     <div class="panel">
+                        <div class="metrics" style="margin-bottom: 14px">
+                           <div class="metric"><span>Upcoming appointments</span><strong class="warn" id="upcomingPriCount">—</strong></div>
+                        </div>
+                        <div class="table-scroll">
+                           <table>
+                              <thead><tr><th>Appt Date</th><th>VIN</th><th>Part #</th><th>Status</th></tr></thead>
+                              <tbody id="upcomingPriQueue"><tr><td colspan="4" class="muted">Loading upcoming appointments…</td></tr></tbody>
+                           </table>
+                        </div>
+                     </div>
+                  </section>
+
+                  <section class="view-body view" id="view-svc-missed" hidden>
+                     <div class="subhead"><h3>Missed opportunities</h3><span>Per-advisor MPI+3 and missed-opportunity scorecard</span></div>
+                     <div class="panel" id="missedOpportunitiesPanel">
+                        <div class="metrics" style="margin-bottom: 14px">
+                           <div class="metric"><span>Service advisors reported</span><strong class="warn" id="missedOpportunitiesCount">—</strong></div>
+                        </div>
+                        <div class="tabs" role="tablist">
+                           <button type="button" class="tab-btn active" data-tab="moOverview" role="tab" aria-selected="true" onclick="showMissedOppTab('moOverview')">Overview</button>
+                           <button type="button" class="tab-btn" data-tab="moMissedOpp" role="tab" aria-selected="false" onclick="showMissedOppTab('moMissedOpp')">Missed Opportunities</button>
+                           <button type="button" class="tab-btn" data-tab="moRedTag" role="tab" aria-selected="false" onclick="showMissedOppTab('moRedTag')">Red Tag &amp; Penetration</button>
+                           <button type="button" class="tab-btn" data-tab="moReturnRate" role="tab" aria-selected="false" onclick="showMissedOppTab('moReturnRate')">60-Day Return Rates</button>
+                        </div>
+                        <div class="tab-panel table-scroll" id="moOverview">
+                           <table>
+                              <thead><tr><th>Dealer Code</th><th>Service Advisor ID</th><th>Total ROs</th><th>Total VIN #</th><th>MPI+3 RO</th><th>MPI+3 Utilization %</th></tr></thead>
+                              <tbody id="moOverviewQueue"><tr><td colspan="6" class="muted">Loading missed opportunities data…</td></tr></tbody>
+                           </table>
+                        </div>
+                        <div class="tab-panel hidden table-scroll" id="moMissedOpp">
+                           <table>
+                              <thead><tr><th>Dealer Code</th><th>Service Advisor ID</th><th>CP Missed Opp.</th><th>Missed Opp. (Warranty)</th><th>Missed Opp. (Recall)</th><th>Missed Opp. (Red Coding)</th><th>Warr RO w/o CP &amp; Recall</th><th>Recall RO w/o CP</th><th>Recall ROs Missing MPI+3</th><th>Warranty ROs Missing MPI+3</th></tr></thead>
+                              <tbody id="moMissedOppQueue"><tr><td colspan="10" class="muted">Loading missed opportunities data…</td></tr></tbody>
+                           </table>
+                        </div>
+                        <div class="tab-panel hidden table-scroll" id="moRedTag">
+                           <table>
+                              <thead><tr><th>Dealer Code</th><th>Service Advisor ID</th><th>Red Brake Count</th><th>Brake Penetration %</th><th>Red Battery Count</th><th>Battery Penetration %</th><th>Red Tire Count</th><th>Tire Penetration %</th><th>Red Wiper Count</th><th>Wiper Penetration %</th><th>Red Cabin Air Filter Count</th><th>Cabin Air Filter Penetration %</th></tr></thead>
+                              <tbody id="moRedTagQueue"><tr><td colspan="12" class="muted">Loading missed opportunities data…</td></tr></tbody>
+                           </table>
+                        </div>
+                        <div class="tab-panel hidden table-scroll" id="moReturnRate">
+                           <table>
+                              <thead><tr><th>Dealer Code</th><th>Service Advisor ID</th><th>Red Brake 60d Return Rate</th><th>Red Battery 60d Return Rate</th><th>Red Tire 60d Return Rate</th><th>Red Wiper 60d Return Rate</th><th>Red Cabin Air 60d Return Rate</th></tr></thead>
+                              <tbody id="moReturnRateQueue"><tr><td colspan="7" class="muted">Loading missed opportunities data…</td></tr></tbody>
+                           </table>
+                        </div>
+                     </div>
+                  </section>
                </div>
             </div>
-         </header>
-         <div class="filters">
-            <label
-               >Location
-               <select>
-                  <option>Junge North Liberty</option>
-               </select></label
-            ><label
-               >Department
-               <select id="departmentSelect">
-                  <option value="index.html" selected>Parts</option>
-                  <option value="service-department.html">Service</option>
-               </select></label
-            ><button id="refreshBtn" onclick="refreshAllData()">
-   <span class="btn-spinner" aria-hidden="true"></span>
-   <span>Refresh KPI Data</span>
-</button>
+
+            <!-- ================= RETURNS ================= -->
+            <div class="view" id="returnsView" hidden>
+               <div id="gate">
+                  <div class="panel">
+                     <h2>Part Return Claims</h2>
+                     <p class="sub">This section is restricted. Enter the access code to continue.</p>
+                     <form id="gateForm">
+                        <input id="gatePassword" type="password" placeholder="Access code" autocomplete="off" />
+                        <button type="submit" class="btn">Unlock</button>
+                        <div id="gateError"></div>
+                     </form>
+                  </div>
+               </div>
+               <div class="view-body" id="returnsContent" hidden>
+                  <div>
+                     <h3 style="margin: 0 0 2px; font-size: 15px; color: var(--n)">Open claims</h3>
+                     <p class="note">Pulled from a GitHub-hosted CSV and refreshed on open.</p>
+                  </div>
+                  <div class="panel">
+                     <div class="metrics" style="margin-bottom: 14px">
+                        <div class="metric"><span>Open claims</span><strong class="warn" id="openClaimCount">—</strong></div>
+                        <div class="metric"><span>Open claim value</span><strong class="bad" id="openClaimValue">—</strong></div>
+                     </div>
+                     <div class="table-scroll">
+                        <table>
+                           <thead><tr><th>Claim #</th><th>Part Number</th><th>Description</th><th>Submitted</th><th>Status</th><th style="text-align: right">Amount</th></tr></thead>
+                           <tbody id="claimsTable"><tr><td colspan="6" class="muted">Loading claims data…</td></tr></tbody>
+                        </table>
+                     </div>
+                     <button id="refreshClaimsBtn" class="btn" type="button" onclick="loadClaims()" style="margin-top: 14px">
+                        <span class="btn-spin" aria-hidden="true">
+                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+                        </span>
+                        <span>Refresh Claims Data</span>
+                     </button>
+                  </div>
+               </div>
+            </div>
+
+            <!-- ================= TRENDS ================= -->
+            <div class="view" id="trendsView" hidden>
+               <div class="view-body">
+                  <div id="setupCallout" class="setup-callout" hidden>
+                     <h3>Set up the trend history feed</h3>
+                     <p>This section hasn't found any history data yet. It reads a sheet tab where <strong>one new row is added each day</strong> — unlike the rest of the dashboard, which overwrites a single row.</p>
+                     <p>In the same Google Sheet used by the rest of the dashboard:</p>
+                     <p>1. Add a tab named <code>History</code> (or similar) with this header row:</p>
+                     <pre>Date, DemandFillRate, GrossProfitPercent, LostSales, InventoryOnHand, ExcessInventory, MonthsSupply, PartsSalesToday, Aging6to11, Aging12plus</pre>
+                     <p>2. Add one row per day — either by hand, or automatically with the Apps Script in <code>GOOGLE_SHEETS_SETUP.md</code>.</p>
+                     <p>3. Publish that tab to the web (Share → General access → Anyone with the link) and get its <code>gid</code> the same way as the other feeds.</p>
+                     <p>4. Paste the resulting CSV URL into <code>TREND_CSV_PATH</code> in this file's <code>&lt;script&gt;</code> section, then commit.</p>
+                  </div>
+
+                  <div id="trendGrid" class="trend-grid"></div>
+
+                  <details class="data-table-details" id="dataTableDetails" hidden>
+                     <summary>View raw data table</summary>
+                     <div class="table-scroll">
+                        <table>
+                           <thead><tr id="dataTableHead"></tr></thead>
+                           <tbody id="dataTableBody"></tbody>
+                        </table>
+                     </div>
+                  </details>
+               </div>
+            </div>
+
+            <footer class="footer">
+               Created by Sam Glidewell - Junge Automotive Group 2026
+            </footer>
          </div>
-         <section class="section">
-            <h2>Demand Fill Analysis</h2>
-            <p class="note">DealerTrack daily demand fill report.</p>
-            <div class="grid">
-               <div class="card">
-                  <div class="label">Shelf Fill Rate</div>
-                  <div class="value" id="DemandFillRate">94.2%</div>
-                  <div class="detail warn">Target: 95.0%</div>
-                  <div class="detail warn">Month to date data</div>
-               </div>
-               <div class="card">
-                  <div class="label">Gross Profit Percentage</div>
-                  <div class="value" id="GrossProfitPercent">91.8%</div>
-                  <div class="detail warn">Target: 40.0%</div>
-                  <div class="detail warn">Month to date data</div>
-               </div>
-               <div class="card">
-                  <div class="label">Lost Sales</div>
-                  <div class="value" id="LostSales">$3,840</div>
-                  <div class="detail bad"></div>
-                  <div class="detail warn">Month to date data</div>
-               </div>
-               <div class="card">
-                  <div class="label">Backorder Lines</div>
-                  <div class="value" id="BackorderLines">27</div>
-                  <div class="detail warn"></div>
-                  <div class="detail warn">Current day data</div>
-               </div>
-            </div>
-         </section>
-         <section class="section">
-            <h2>Inventory Aging</h2>
-            <p class="note">DealerTrack stock status / aging report.</p>
-            <div class="grid">
-               <div class="card">
-                  <div class="label">Inventory On-Hand</div>
-                  <div class="value" id="InventoryOnHand">$624,000</div>
-                  <div class="detail warn">Current day data</div>
-               </div>
-               <div class="card">
-                  <div class="label">Obsolescence</div>
-                  <div class="value" id="Obsolescence">6.7%</div>
-                  <div class="detail good"></div>
-                  <div class="detail warn">Current day data</div>
-               </div>
-               <div class="card">
-                  <div class="label">Excess Inventory</div>
-                  <div class="value" id="ExcessInventory">18.4%</div>
-                  <div class="detail warn"></div>
-                  <div class="detail warn">Current day data</div>
-               </div>
-               <div class="card">
-                  <div class="label">Months Supply On Hand</div>
-                  <div class="value" id="MonthsSupply">1.5</div>
-                  <div class="detail warn">Target: 1.5</div>
-                  <div class="detail warn">Current day data</div>
-               </div>
-            </div>
-         </section>
-         <section class="section">
-            <div class="twocol">
-               <div class="panel">
-                  <h3>Inventory aging by value</h3>
-                  <p class="sub">
-                     Use DealerTrack aging buckets to target returns or
-                     liquidation.
-                  </p>
-                  <div class="bars">
-                     <div class="barrow">
-                        <div class="barrow-label">
-                           <span>6–11 months</span>
-                           <strong id="valAging6to11">—</strong>
-                        </div>
-                        <div class="track">
-                           <div class="fill a" id="fillAging6to11" style="width: 0%"></div>
-                        </div>
-                     </div>
-                     <div class="barrow">
-                        <div class="barrow-label">
-                           <span>12+ months</span>
-                           <strong id="valAging12plus">—</strong>
-                        </div>
-                        <div class="track">
-                           <div class="fill r" id="fillAging12plus" style="width: 0%"></div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-               <div class="panel">
-                  <h3>Daily exceptions</h3>
-                  <p class="sub">Manager action queue.</p>
-                  <div class="metrics">
-                     <div class="metric">
-                        <span>Emergency purchases</span
-                        ><strong class="warn"></strong>
-                     </div>
-                     <div class="metric">
-                        <span>Backordered service parts</span
-                        ><strong class="bad"></strong>
-                     </div>
-                     <div class="metric">
-                        <span>Unreceived POs</span
-                        ><strong class="warn"></strong>
-                     </div>
-                     <div class="metric">
-                        <span>Open special orders</span><strong></strong>
-                     </div>
-                     <div class="metric">
-                        <span>Negative on-hand</span
-                        ><strong class="bad"></strong>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </section>
-         <section class="section">
-            <h2>Sales Analysis, Overrides &amp; Unrealized Sales</h2>
-            <p class="note">
-               DealerTrack daily sales analysis, price override audit, and
-               unrealized sales report.
-            </p>
-            <div class="grid">
-               <div class="card">
-                  <div class="label" id="PartsSalesTodayLabel">Parts Sales Today</div>
-                  <div class="value" id="PartsSalesToday">$12,480</div>
-                  <div class="detail good"></div>
-                  <div class="detail warn">Previous day data</div>
-               </div>
-               <div class="card">
-                  <div class="label" id="GrossProfitTodayLabel">Gross Profit Today</div>
-                  <div class="value" id="GrossProfitToday">$4,930</div>
-                  <div class="detail good"></div>
-                  <div class="detail warn">Previous day data</div>
-               </div>
-               <div class="card">
-                  <div class="label">Override Lines</div>
-                  <div class="value" id="OverrideLines">42</div>
-                  <div class="detail warn"></div>
-                  <div class="detail warn">Previous day data</div>
-               </div>
-               <div class="card">
-                  <div class="label">Override GP Impact</div>
-                  <div class="value" id="OverrideGPImpact">$286</div>
-                  <div class="detail bad">Lost gross at final sale</div>
-                  <div class="detail warn">Previous day data</div>
-               </div>
-               <div class="card">
-                  <div class="label">Unrealized Sales</div>
-                  <div class="value" id="UnrealizedSales">$3,840</div>
-                  <div class="detail bad"></div>
-                  <div class="detail warn">Current day data</div>
-               </div>
-               <div class="card">
-                  <div class="label">Unrealized GP</div>
-                  <div class="value" id="UnrealizedGP">$1,520</div>
-                  <div class="detail bad">Estimated missed gross</div>
-                  <div class="detail warn">Current day data</div>
-               </div>
-               <div class="card">
-                  <div class="label" id="InternalSalesLabel">Internal Sales</div>
-                  <div class="value" id="InternalSales">$96.88</div>
-                  <div class="detail warn"></div>
-                  <div class="detail warn">Previous day data</div>
-               </div>
-               <div class="card">
-                  <div class="label">Sales By EP</div>
-                  <div class="value" id="SalesByEP">$3,940</div>
-                  <div class="detail good"></div>
-                  <div class="detail warn">Month to date data</div>
-               </div>
-            </div>
-         </section>
-         <section class="section">
-            <h2>Open Purchase Orders</h2>
-            <p class="note">DealerTrack open PO report.</p>
-            <div class="panel">
-               <div class="metrics" style="margin-bottom: 14px">
-                  <div class="metric">
-                     <span>Open POs</span
-                     ><strong class="warn" id="openPosCount">—</strong>
-                  </div>
-               </div>
-               <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
-                  <table>
-                     <thead>
-                        <tr>
-                           <th>PO #</th>
-                           <th>Order Date</th>
-                           <th>Vendor</th>
-                           <th>Name</th>
-                           <th>User</th>
-                           <th>Control</th>
-                           <th>Account</th>
-                           <th>Amount</th>
-                        </tr>
-                     </thead>
-                     <tbody id="openPosQueue">
-                        <tr>
-                           <td colspan="8" class="muted">Loading open PO data…</td>
-                        </tr>
-                     </tbody>
-                     <tfoot>
-                        <tr>
-                           <td colspan="7">Total</td>
-                           <td class="num" id="openPosTotal">—</td>
-                        </tr>
-                     </tfoot>
-                  </table>
-               </div>
-            </div>
-         </section>
-         <section class="section">
-            <h2>Daily Scorecard</h2>
-            <table id="scorecardTable">
-               <thead>
-                  <tr>
-                     <th>Metric</th>
-                     <th>Current</th>
-                     <th>Target</th>
-                     <th>Status</th>
-                  </tr>
-               </thead>
-               <tbody>
-                  <tr>
-                     <td>Demand fill rate</td>
-                     <td class="num" id="ScoreDemandFillRate">-</td>
-                     <td class="num" id="ScoreDemandFillRateTarget">95.0%</td>
-                     <td><span class="badge" id="ScoreDemandFillRateStatus">Watch</span></td>
-                  </tr>
-                  <tr>
-                     <td>Parts gross profit</td>
-                     <td class="num" id="ScoreGrossProfit">-</td>
-                     <td class="num" id="ScoreGrossProfitTarget">40.0%</td>
-                     <td><span class="badge good" id="ScoreGrossProfitStatus">Above target</span></td>
-                  </tr>
-                  <tr>
-                     <td>Obsolescence</td>
-                     <td class="num" id="ScoreObsolescence"></td>
-                     <td class="num" id="ScoreObsolescenceTarget">3.0%</td>
-                     <td><span class="badge good" id="ScoreObsolescenceStatus">On target</span></td>
-                  </tr>
-                  <tr>
-                     <td>Months Supply</td>
-                     <td class="num"></td>
-                     <td class="num">1.5</td>
-                     <td><span class="badge bad">Needs action</span></td>
-                  </tr>
-                  <tr>
-                     <td>Unrealized sales</td>
-                     <td class="num" id="ScoreUnrealizedSales"></td>
-                     <td class="num"></td>
-                     <td><span class="badge">Watch</span></td>
-                  </tr>
-               </tbody>
-            </table>
-         </section>
-         <footer class="footer">
-            Created by Sam Glidewell - Junge Automotive Group 2026 ·
-            <a href="service-department.html">Service Department</a> ·
-            <a href="part-returns.html">Part Return Claims</a> ·
-            <a href="trend-analysis.html">Trend Analysis</a>
-         </footer>
       </div>
+
       <script>
-
          // ==========================================
-         // CONFIG
+         // CONFIG — every feed the dashboard reads. See GOOGLE_SHEETS_SETUP.md.
          // ==========================================
-         // Main KPI feed. Point this at a Google Sheet published to the
-         // web as CSV (File > Share > Publish to web > pick the sheet
-         // tab > Comma-separated values) so the cards can be updated by
-         // editing the sheet directly — no GitHub commit required. See
-         // GOOGLE_SHEETS_SETUP.md for the exact column headers and steps.
          const CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=0";
-
-         // Inventory aging-by-value buckets, kept as their own sheet/tab
-         // since they're updated on a different cadence than the daily
-         // KPI feed. Same Google Sheets publish-to-web setup as above.
-         // TODO: replace with your published Google Sheets CSV link.
          const AGING_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=67671052";
-
-         // Open Purchase Orders list, kept as its own sheet/tab. Same
-         // Google Sheets publish-to-web setup as above.
          const OPEN_POS_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=548227864";
-
-         // How often to automatically re-pull the CSV, in milliseconds.
-         // 300000 = 5 minutes. Set to 0 to disable auto-refresh (manual button only).
+         const AGED_RO_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=1859877212";
+         const AGED_RO_THRESHOLD_DAYS = 10;
+         const BACKORDERED_PARTS_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=1865302902";
+         const UPTIME_ASSIST_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=1612348513";
+         const UPCOMING_PRI_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=970116550";
+         const MISSED_OPPORTUNITIES_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=1553069819";
+         const CLOSED_RO_WITH_PARTS_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=1434872996";
+         const TREND_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=902713062";
+         const CLAIMS_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/PartReturnClaims.csv";
          const REFRESH_INTERVAL_MS = 300000;
-
-         // ==========================================
-         // THEME
-         // ==========================================
-
-         const THEME_STORAGE_KEY = "kpiDashboardTheme";
-
-         function applyTheme(theme) {
-            document.documentElement.setAttribute("data-theme", theme);
-
-            const icon = document.getElementById("themeToggleIcon");
-            if (icon) {
-               icon.textContent = theme === "dark" ? "☀️" : "🌙";
-            }
-         }
-
-         function toggleTheme() {
-            const current =
-               document.documentElement.getAttribute("data-theme") === "dark"
-                  ? "dark"
-                  : "light";
-            const next = current === "dark" ? "light" : "dark";
-
-            localStorage.setItem(THEME_STORAGE_KEY, next);
-            applyTheme(next);
-         }
-
-         applyTheme(
-            document.documentElement.getAttribute("data-theme") === "dark"
-               ? "dark"
-               : "light",
-         );
-
-         // ==========================================
-         // NAVIGATION
-         // ==========================================
-
-         document.getElementById("departmentSelect").addEventListener("change", function (event) {
-            const target = event.target.value;
-            if (target) {
-               window.location.href = target;
-            }
-         });
-
-         // ==========================================
-         // KPI MAPPING
-         // ==========================================
-
-         function setValue(id, value) {
-            const element = document.getElementById(id);
-
-            if (element) {
-               element.textContent = value;
-            }
-         }
-
-         function currency(value) {
-            return parseNumber(value).toLocaleString("en-US", {
-               style: "currency",
-               currency: "USD",
-            });
-         }
-
-         // Formats a percent field for display. Handles both a raw number
-         // ("94.2") and a value a spreadsheet already rendered as text with
-         // its own "%" sign ("94.20%") — parseNumber strips non-numeric
-         // characters either way, so this never double-stamps the sign.
-         function percent(value) {
-            return `${parseNumber(value)}%`;
-         }
-
-         // Abbreviated currency for the aging bars, e.g. $449K, $1.2M.
-         function currencyAbbrev(value) {
-            const n = Number(value || 0);
-
-            if (Math.abs(n) >= 1000000) {
-               return `$${(n / 1000000).toFixed(1)}M`;
-            }
-
-            if (Math.abs(n) >= 1000) {
-               return `$${Math.round(n / 1000)}K`;
-            }
-
-            return currency(n);
-         }
-
-         /**
-          * Card labels report the prior business day's activity (DealerTrack's
-          * daily feed lands the morning after), so the label itself should
-          * read that date rather than a static "Today".
-          */
-         function updateDailyLabels() {
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-
-            const dateText = yesterday.toLocaleDateString("en-US", {
-               month: "short",
-               day: "numeric",
-            });
-
-            setValue("PartsSalesTodayLabel", `Parts Sales ${dateText}`);
-            setValue("GrossProfitTodayLabel", `Gross Profit ${dateText}`);
-            setValue("InternalSalesLabel", `Internal Sales ${dateText}`);
-         }
-
-         /**
-          * Updates the "Reporting date" and "Updated" stamp in the header.
-          * status: "" (normal), "loading", or "error" — used to give a
-          * quick visual cue when the last refresh attempt failed.
-          */
-         function stamp(status) {
-            const now = new Date();
-
-            setValue(
-               "date",
-               now.toLocaleDateString("en-US", {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-               }),
-            );
-
-            const timeText = now.toLocaleTimeString("en-US", {
-               hour: "numeric",
-               minute: "2-digit",
-            });
-
-            const updatedEl = document.getElementById("updated");
-            if (updatedEl) {
-               if (status === "error") {
-                  updatedEl.textContent = `Refresh failed at ${timeText} — showing last known data`;
-                  updatedEl.style.color = "#ffb4b4";
-               } else {
-                  updatedEl.textContent = timeText;
-                  updatedEl.style.color = "";
-               }
-            }
-
-            updateDailyLabels();
-         }
-
- function mapCsvKpiData(kpi) {
-
-   setValue(
-      "DemandFillRate",
-      percent(getFieldValue(kpi, ["DemandFillRate", "Demand Fill Rate", "Shelf Fill Rate"]))
-   );
-
-   setValue(
-      "GrossProfitPercent",
-      percent(getFieldValue(kpi, ["GrossProfitPercent", "Gross Profit Percent", "Gross Profit %"]))
-   );
-
-   setValue(
-      "LostSales",
-      currency(getFieldValue(kpi, ["LostSales", "Lost Sales"]))
-   );
-
-   setValue(
-      "BackorderLines",
-      getFieldValue(kpi, ["BackorderLines", "Backorder Lines"])
-   );
-
-   setValue(
-      "InventoryOnHand",
-      currency(getFieldValue(kpi, ["InventoryOnHand", "Inventory On Hand", "Inventory On-Hand"]))
-   );
-
-   setValue(
-      "Obsolescence",
-      percent(getFieldValue(kpi, ["Obsolescence"]))
-   );
-
-   setValue(
-      "ExcessInventory",
-      percent(getFieldValue(kpi, ["ExcessInventory", "Excess Inventory"]))
-   );
-
-    setValue(
-      "MonthsSupply",
-      (getFieldValue(kpi, ["MonthsSupply", "Months Supply"]))
-   );
-    
-   setValue(
-      "PartsSalesToday",
-      currency(getFieldValue(kpi, ["PartsSalesToday", "Parts Sales Today", "Parts Sales"]))
-   );
-
-   setValue(
-      "GrossProfitToday",
-      currency(getFieldValue(kpi, ["GrossProfitToday", "Gross Profit Today"]))
-   );
-
-   setValue(
-      "OverrideLines",
-      getFieldValue(kpi, ["OverrideLines", "Override Lines"])
-   );
-
-   setValue(
-      "OverrideGPImpact",
-      currency(getFieldValue(kpi, ["OverrideGPImpact", "Override GP Impact"]))
-   );
-
-   setValue(
-      "UnrealizedSales",
-      currency(getFieldValue(kpi, ["UnrealizedSales", "Unrealized Sales"]))
-   );
-
-   setValue(
-      "UnrealizedGP",
-      currency(getFieldValue(kpi, ["UnrealizedGP", "Unrealized GP"]))
-   );
-
-   setValue(
-      "InternalSales",
-      currency(getFieldValue(kpi, ["InternalSales", "Internal Sales"]))
-   );
-
-   setValue(
-      "SalesByEP",
-      getFieldValue(kpi, ["SalesByEP", "Sales By EP", "Sales by EP"])
-   );
-
-   syncScorecard();
-
-}
-
-/**
- * Compares a Current reading against a (still fixed, manually-set) Target
- * and picks a status badge. "higher" metrics are good at/above target;
- * "lower" metrics are good at/below target. A 10% band beyond target is
- * "Watch" before it counts as "Needs action".
- */
-function computeStatus(currentText, targetText, direction) {
-   const current = parseNumber(currentText);
-   const target = parseNumber(targetText);
-
-   if (!targetText || Number.isNaN(current) || target === 0) {
-      return null;
-   }
-
-   const onTarget = direction === "higher" ? current >= target : current <= target;
-   if (onTarget) {
-      return { label: "On target", cls: "good" };
-   }
-
-   const watchBand = direction === "higher"
-      ? current >= target * 0.9
-      : current <= target * 1.1;
-
-   return watchBand
-      ? { label: "Watch", cls: "" }
-      : { label: "Needs action", cls: "bad" };
-}
-
-function setStatusBadge(id, status) {
-   const el = document.getElementById(id);
-   if (!el || !status) {
-      return;
-   }
-
-   el.textContent = status.label;
-   el.className = status.cls ? `badge ${status.cls}` : "badge";
-}
-
-/**
- * Mirrors the Daily Scorecard's Current column and Status badges from the
- * matching KPI cards above. Targets are left as fixed business goals set
- * directly in the scorecard (read here only to compute status, never
- * written to). Only rows with an obvious matching card are wired up —
- * "Price override rate" has no single corresponding value above (Override
- * Lines is a count, not a rate), and "Unrealized sales" has no target to
- * compare against, so both are left as-is.
- */
-function syncScorecard() {
-   const demandFillCurrent = document.getElementById("DemandFillRate")?.textContent ?? "-";
-   setValue("ScoreDemandFillRate", demandFillCurrent);
-   setStatusBadge(
-      "ScoreDemandFillRateStatus",
-      computeStatus(demandFillCurrent, document.getElementById("ScoreDemandFillRateTarget")?.textContent, "higher"),
-   );
-
-   const grossProfitCurrent = document.getElementById("GrossProfitPercent")?.textContent ?? "-";
-   setValue("ScoreGrossProfit", grossProfitCurrent);
-   setStatusBadge(
-      "ScoreGrossProfitStatus",
-      computeStatus(grossProfitCurrent, document.getElementById("ScoreGrossProfitTarget")?.textContent, "higher"),
-   );
-
-   const obsolescenceCurrent = document.getElementById("Obsolescence")?.textContent ?? "-";
-   setValue("ScoreObsolescence", obsolescenceCurrent);
-   setStatusBadge(
-      "ScoreObsolescenceStatus",
-      computeStatus(obsolescenceCurrent, document.getElementById("ScoreObsolescenceTarget")?.textContent, "lower"),
-   );
-
-   setValue("ScoreUnrealizedSales", document.getElementById("UnrealizedSales")?.textContent ?? "-");
-}
-
-         // ==========================================
-         // SOURCE SWITCHER
-         // ==========================================
-
-         function normalizeText(value) {
-            return String(value || "")
-               .toLowerCase()
-               .replace(/[^a-z0-9]/g, "");
-         }
-         /**
-          * Returns the first matching field value
-          * using flexible header matching.
-          */
-         function getFieldValue(record, fieldNames) {
-            const matchingKey = Object.keys(record).find((recordKey) =>
-               fieldNames.some(
-                  (fieldName) =>
-                     normalizeText(recordKey) === normalizeText(fieldName),
-               ),
-            );
-
-            return matchingKey === undefined
-               ? ""
-               : String(record[matchingKey]).trim();
-         }
-
-         /**
-          * Appends a cache-busting timestamp to a feed URL, whether or not
-          * the URL already has a query string (published Google Sheets CSV
-          * links come with one, e.g. "...?gid=0&single=true&output=csv").
-          */
-         function withCacheBust(url) {
-            const separator = url.includes("?") ? "&" : "?";
-            return `${url}${separator}t=${Date.now()}`;
-         }
-         // ==========================================
-         // CSV FUNCTIONS
-         // (YOUR EXISTING CODE BELOW)
-         // ==========================================
-
-         /**
-          * Converts formatted strings into numbers.
-          */
-         function parseNumber(value) {
-            return Number(String(value || "").replace(/[^0-9.-]/g, "")) || 0;
-         }
-
-         /**
-          * Parse CSV text into an array of objects.
-          * Supports quoted values and escaped quotes.
-          */
-         function parseCsv(csvText) {
-            let rows = [];
-            let currentRow = [];
-            let currentField = "";
-            let insideQuotes = false;
-
-            for (let i = 0; i < csvText.length; i++) {
-               const currentCharacter = csvText[i];
-               const nextCharacter = csvText[i + 1];
-
-               if (
-                  currentCharacter === '"' &&
-                  insideQuotes &&
-                  nextCharacter === '"'
-               ) {
-                  currentField += '"';
-                  i++;
-               } else if (currentCharacter === '"') {
-                  insideQuotes = !insideQuotes;
-               } else if (currentCharacter === "," && !insideQuotes) {
-                  currentRow.push(currentField);
-                  currentField = "";
-               } else if (
-                  (currentCharacter === "\n" || currentCharacter === "\r") &&
-                  !insideQuotes
-               ) {
-                  if (currentCharacter === "\r" && nextCharacter === "\n") {
-                     i++;
-                  }
-
-                  currentRow.push(currentField);
-
-                  if (currentRow.some((cell) => cell.trim())) {
-                     rows.push(currentRow);
-                  }
-
-                  currentRow = [];
-                  currentField = "";
-               } else {
-                  currentField += currentCharacter;
-               }
-            }
-
-            if (currentField || currentRow.length) {
-               currentRow.push(currentField);
-               rows.push(currentRow);
-            }
-
-            const headers = rows.shift() || [];
-
-            return rows.map((rowData) =>
-               Object.fromEntries(
-                  headers.map((header, index) => [
-                     header.trim(),
-                     rowData[index] || "",
-                  ]),
-               ),
-            );
-         }
-async function loadKpiCsv() {
-
-   try {
-
-      // Cache-bust so the browser/proxy doesn't serve a stale copy of
-      // the CSV between refreshes.
-      const response = await fetch(
-         withCacheBust(CSV_PATH),
-         { cache: "no-store" }
-      );
-
-      if (!response.ok) {
-
-         throw new Error(
-            `Unable to load CSV (${response.status})`
-         );
-
-      }
-
-      const csvText =
-         await response.text();
-
-      const records =
-         parseCsv(csvText);
-
-      if (!records.length) {
-
-         console.warn(
-            "No KPI rows found."
-         );
-
-         stamp("error");
-
-         return;
-
-      }
-
-      const kpi =
-         records[0];
-
-      mapCsvKpiData(kpi);
-
-      stamp();
-
-   }
-   catch (error) {
-
-      console.error(
-         "CSV Load Error:",
-         error
-      );
-
-      stamp("error");
-
-   }
-
-}
-         // ==========================================
-         // INVENTORY AGING BY VALUE
-         // ==========================================
-
-         function setAgingBar(prefix, value, totalValue) {
-            const pct = totalValue > 0 ? (value / totalValue) * 100 : 0;
-
-            const fillEl = document.getElementById(`fill${prefix}`);
-            if (fillEl) {
-               fillEl.style.width = `${pct.toFixed(1)}%`;
-            }
-
-            setValue(`val${prefix}`, currencyAbbrev(value));
-         }
-
-         function mapAgingCsvData(bucket) {
-            const values = {
-               Aging6to11: parseNumber(getFieldValue(bucket, ["Aging6to11", "6-11 Months", "6 to 11 Months"])),
-               Aging12plus: parseNumber(getFieldValue(bucket, ["Aging12plus", "12+ Months", "12 Plus Months"])),
-            };
-
-            const total = values.Aging6to11 + values.Aging12plus;
-
-            setAgingBar("Aging6to11", values.Aging6to11, total);
-            setAgingBar("Aging12plus", values.Aging12plus, total);
-         }
-
-         async function loadAgingCsv() {
-            try {
-               const response = await fetch(
-                  withCacheBust(AGING_CSV_PATH),
-                  { cache: "no-store" },
-               );
-
-               if (!response.ok) {
-                  throw new Error(
-                     `Unable to load aging CSV (${response.status})`,
-                  );
-               }
-
-               const csvText = await response.text();
-               const records = parseCsv(csvText);
-
-               if (!records.length) {
-                  console.warn("No inventory aging rows found.");
-                  return;
-               }
-
-               mapAgingCsvData(records[0]);
-            } catch (error) {
-               console.error("Aging CSV Load Error:", error);
-            }
-         }
-
-         // ==========================================
-         // GENERIC CSV-BACKED LISTS
-         // (Open Purchase Orders)
-         // ==========================================
-
-         /**
-          * Renders `records` straight into a table body, one row per record,
-          * with no filtering or sorting — these lists are curated in the
-          * uploaded CSV itself. Columns may supply a `format` function
-          * (e.g. currency) and a `numeric` flag to right-align the cell.
-          */
-         function renderRecordTable(tbodyId, records, columns, emptyMessage) {
-            const tbody = document.getElementById(tbodyId);
-            if (!tbody) {
-               return;
-            }
-
-            if (!records.length) {
-               tbody.innerHTML = `<tr><td colspan="${columns.length}" class="muted">${emptyMessage}</td></tr>`;
-               return;
-            }
-
-            tbody.innerHTML = records
-               .map((record) => {
-                  const cells = columns
-                     .map((column) => {
-                        const raw = getFieldValue(record, column.fields);
-                        const value = column.format ? column.format(raw) : raw;
-                        const cls = column.numeric ? ' class="num"' : "";
-                        return `<td${cls}>${escapeHtml(value)}</td>`;
-                     })
-                     .join("");
-                  return `<tr>${cells}</tr>`;
-               })
-               .join("");
-         }
-
-         async function loadCsvList(path, tbodyId, columns, emptyMessage, countId, totalOptions) {
-            const tbody = document.getElementById(tbodyId);
-
-            try {
-               const response = await fetch(withCacheBust(path), { cache: "no-store" });
-
-               if (!response.ok) {
-                  throw new Error(`Unable to load CSV (${response.status})`);
-               }
-
-               const csvText = await response.text();
-               const records = parseCsv(csvText);
-
-               if (countId) {
-                  setValue(countId, String(records.length));
-               }
-
-               renderRecordTable(tbodyId, records, columns, emptyMessage);
-
-               if (totalOptions) {
-                  const total = records.reduce(
-                     (sum, record) =>
-                        sum + parseNumber(getFieldValue(record, totalOptions.fields)),
-                     0,
-                  );
-                  setValue(totalOptions.elementId, currency(total));
-               }
-            } catch (error) {
-               console.error("CSV Load Error:", path, error);
-
-               if (countId) {
-                  setValue(countId, "—");
-               }
-
-               if (totalOptions) {
-                  setValue(totalOptions.elementId, "—");
-               }
-
-               if (tbody) {
-                  tbody.innerHTML = `<tr><td colspan="${columns.length}" class="muted">Unable to load data.</td></tr>`;
-               }
-            }
-         }
-
-         function escapeHtml(value) {
-            return String(value || "")
-               .replace(/&/g, "&amp;")
-               .replace(/</g, "&lt;")
-               .replace(/>/g, "&gt;");
-         }
-
-         const OPEN_POS_COLUMNS = [
-            { fields: ["PO", "PO Number", "PO#", "PONumber"] },
-            { fields: ["Order Date"] },
-            { fields: ["Vendor"] },
-            { fields: ["Name"] },
-            { fields: ["User"] },
-            { fields: ["Control"] },
-            { fields: ["Account"] },
-            { fields: ["Amount", "PO Amount", "Total"], format: currency, numeric: true },
-         ];
-
-         function loadOpenPosCsv() {
-            return loadCsvList(
-               OPEN_POS_CSV_PATH,
-               "openPosQueue",
-               OPEN_POS_COLUMNS,
-               "No open purchase orders.",
-               "openPosCount",
-               { fields: ["Amount", "PO Amount", "Total"], elementId: "openPosTotal" },
-            );
-         }
-
-         // ==========================================
-         // STARTUP
-         // ==========================================
-
-         async function refreshAllData() {
-            const btn = document.getElementById("refreshBtn");
-            if (btn) {
-               btn.disabled = true;
-               btn.classList.add("loading");
-            }
-
-            try {
-               await Promise.all([loadKpiCsv(), loadAgingCsv(), loadOpenPosCsv()]);
-            } finally {
-               if (btn) {
-                  btn.disabled = false;
-                  btn.classList.remove("loading");
-               }
-            }
-         }
-
-         // Initialize dashboard once the page finishes loading.
-window.addEventListener("load", function () {
-   stamp();
-
-   refreshAllData();
-
-   if (REFRESH_INTERVAL_MS > 0) {
-      setInterval(refreshAllData, REFRESH_INTERVAL_MS);
-   }
-});
       </script>
-   
-</body>
+      <script src="app.js"></script>
+   </body>
 </html>
