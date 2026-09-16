@@ -165,13 +165,16 @@
          .section h2 {
             color: var(--n);
             font-size: 18px;
-            margin: 0 0 8px;
+            margin: 0;
          }
          .note,
          .sub,
          .muted {
             color: var(--s);
             font-size: 12px;
+         }
+         .section > .note {
+            margin: 6px 0 8px;
          }
          .grid {
             display: grid;
@@ -306,6 +309,90 @@
             color: var(--s);
             font-size: 12px;
          }
+         .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            cursor: pointer;
+            padding: 4px 0;
+            user-select: none;
+         }
+         .section-header:focus-visible {
+            outline: 2px solid var(--b);
+            outline-offset: 3px;
+            border-radius: 4px;
+         }
+         .section-header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+         }
+         .chevron {
+            display: inline-block;
+            color: var(--s);
+            font-size: 13px;
+            transition: transform 0.2s ease;
+         }
+         .section-header[aria-expanded="true"] .chevron {
+            transform: rotate(180deg);
+         }
+         .section-badge {
+            font-size: 12px;
+            font-weight: 800;
+            padding: 4px 11px;
+            border-radius: 999px;
+            background: var(--surface-alt);
+            color: var(--n);
+            white-space: nowrap;
+         }
+         .section-badge.warn {
+            background: #fdf0da;
+            color: var(--a);
+         }
+         :root[data-theme="dark"] .section-badge.warn {
+            background: #3a2c12;
+         }
+         .section-badge.critical {
+            background: #ffe5e5;
+            color: #ff0000;
+            font-weight: 900;
+         }
+         :root[data-theme="dark"] .section-badge.critical {
+            background: #3a0d0d;
+            color: #ff3b3b;
+         }
+         .collapsible-body {
+            margin-top: 12px;
+         }
+         .collapsible-body.collapsed {
+            display: none;
+         }
+         .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+         }
+         .tab-btn {
+            padding: 7px 12px;
+            border: 1px solid var(--l);
+            border-radius: 6px;
+            background: var(--surface);
+            color: var(--s);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+         }
+         .tab-btn.active {
+            background: var(--b);
+            border-color: var(--b);
+            color: #fff;
+         }
+         .tab-panel.hidden {
+            display: none;
+         }
          @media (max-width: 980px) {
             .grid {
                grid-template-columns: repeat(2, 1fr);
@@ -388,213 +475,364 @@
             </div>
          </section>
          <section class="section">
-            <h2>Closed ROs with Parts</h2>
+            <div
+               class="section-header"
+               id="closedRoWithPartsHeader"
+               role="button"
+               tabindex="0"
+               aria-expanded="true"
+               aria-controls="closedRoWithPartsBody"
+               onclick="toggleSection(this)"
+               onkeydown="handleSectionHeaderKeydown(event, this)"
+            >
+               <h2>Closed ROs with Parts</h2>
+               <div class="section-header-right">
+                  <span class="section-badge critical" id="closedRoWithPartsBadge">—</span>
+                  <span class="chevron" aria-hidden="true">⌄</span>
+               </div>
+            </div>
             <p class="note">Critical — ROs closed while parts remain open. Source: ClosedROswithParts worksheet.</p>
-            <div class="panel critical-panel">
-               <h3>Needs immediate attention</h3>
-               <p class="sub">Sorted as reported.</p>
-               <div class="metrics" style="margin-bottom: 14px">
-                  <div class="metric">
-                     <span>Closed ROs with open parts</span
-                     ><strong class="critical-count" id="closedRoWithPartsCountDetail">—</strong>
+            <div class="collapsible-body" id="closedRoWithPartsBody">
+               <div class="panel critical-panel">
+                  <h3>Needs immediate attention</h3>
+                  <p class="sub">Sorted as reported.</p>
+                  <div class="metrics" style="margin-bottom: 14px">
+                     <div class="metric">
+                        <span>Closed ROs with open parts</span
+                        ><strong class="critical-count" id="closedRoWithPartsCountDetail">—</strong>
+                     </div>
                   </div>
-               </div>
-               <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
-                  <table>
-                     <thead>
-                        <tr>
-                           <th>RO</th>
-                           <th>Close Date</th>
-                           <th>Status</th>
-                           <th>Customer</th>
-                        </tr>
-                     </thead>
-                     <tbody id="closedRoWithPartsQueue">
-                        <tr>
-                           <td colspan="4" class="muted">Loading closed ROs with parts data…</td>
-                        </tr>
-                     </tbody>
-                  </table>
+                  <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
+                     <table>
+                        <thead>
+                           <tr>
+                              <th>RO</th>
+                              <th>Close Date</th>
+                              <th>Status</th>
+                              <th>Customer</th>
+                           </tr>
+                        </thead>
+                        <tbody id="closedRoWithPartsQueue">
+                           <tr>
+                              <td colspan="4" class="muted">Loading closed ROs with parts data…</td>
+                           </tr>
+                        </tbody>
+                     </table>
+                  </div>
                </div>
             </div>
          </section>
          <section class="section">
-            <h2>Aged Service ROs</h2>
-            <div class="panel">
-               <h3>Open 10+ days</h3>
-               <p class="sub">Sorted oldest first.</p>
-               <div class="metrics" style="margin-bottom: 14px">
-                  <div class="metric">
-                     <span>ROs open 10+ days</span
-                     ><strong class="warn" id="agedRoCount">—</strong>
-                  </div>
+            <div
+               class="section-header"
+               id="agedRoHeader"
+               role="button"
+               tabindex="0"
+               aria-expanded="false"
+               aria-controls="agedRoBody"
+               onclick="toggleSection(this)"
+               onkeydown="handleSectionHeaderKeydown(event, this)"
+            >
+               <h2>Aged Service ROs</h2>
+               <div class="section-header-right">
+                  <span class="section-badge warn" id="agedRoBadge">—</span>
+                  <span class="chevron" aria-hidden="true">⌄</span>
                </div>
-               <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
-                  <table>
-                     <thead>
-                        <tr>
-                           <th>RO</th>
-                           <th>Age</th>
-                           <th>Status</th>
-                           <th>Description</th>
-                           <th>Sale</th>
-                        </tr>
-                     </thead>
-                     <tbody id="agedRoQueue">
-                        <tr>
-                           <td colspan="5" class="muted">Loading aged RO data…</td>
-                        </tr>
-                     </tbody>
-                     <tfoot>
-                        <tr>
-                           <td colspan="4">Total</td>
-                           <td class="num" id="agedRoTotal">—</td>
-                        </tr>
-                     </tfoot>
-                  </table>
+            </div>
+            <div class="collapsible-body collapsed" id="agedRoBody">
+               <div class="panel">
+                  <h3>Open 10+ days</h3>
+                  <p class="sub">Sorted oldest first.</p>
+                  <div class="metrics" style="margin-bottom: 14px">
+                     <div class="metric">
+                        <span>ROs open 10+ days</span
+                        ><strong class="warn" id="agedRoCount">—</strong>
+                     </div>
+                  </div>
+                  <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
+                     <table>
+                        <thead>
+                           <tr>
+                              <th>RO</th>
+                              <th>Age</th>
+                              <th>Status</th>
+                              <th>Description</th>
+                              <th>Sale</th>
+                           </tr>
+                        </thead>
+                        <tbody id="agedRoQueue">
+                           <tr>
+                              <td colspan="5" class="muted">Loading aged RO data…</td>
+                           </tr>
+                        </tbody>
+                        <tfoot>
+                           <tr>
+                              <td colspan="4">Total</td>
+                              <td class="num" id="agedRoTotal">—</td>
+                           </tr>
+                        </tfoot>
+                     </table>
+                  </div>
                </div>
             </div>
          </section>
          <section class="section">
-            <h2>Backordered Parts ROs</h2>
-            <p class="note"></p>
-            <div class="panel">
-               <div class="metrics" style="margin-bottom: 14px">
-                  <div class="metric">
-                     <span>ROs with backordered parts</span
-                     ><strong class="warn" id="backorderedPartsCount">—</strong>
-                  </div>
+            <div
+               class="section-header"
+               id="backorderedPartsHeader"
+               role="button"
+               tabindex="0"
+               aria-expanded="false"
+               aria-controls="backorderedPartsBody"
+               onclick="toggleSection(this)"
+               onkeydown="handleSectionHeaderKeydown(event, this)"
+            >
+               <h2>Backordered Parts ROs</h2>
+               <div class="section-header-right">
+                  <span class="section-badge warn" id="backorderedPartsBadge">—</span>
+                  <span class="chevron" aria-hidden="true">⌄</span>
                </div>
-               <div style="overflow-x: auto">
-                  <table>
-                     <thead>
-                        <tr>
-                           <th>RO</th>
-                           <th>Part #</th>
-                           <th>Description</th>
-                           <th>Status</th>
-                           <th>ETA</th>
-                        </tr>
-                     </thead>
-                     <tbody id="backorderedPartsQueue">
-                        <tr>
-                           <td colspan="5" class="muted">Loading backordered parts data…</td>
-                        </tr>
-                     </tbody>
-                  </table>
+            </div>
+            <div class="collapsible-body collapsed" id="backorderedPartsBody">
+               <div class="panel">
+                  <div class="metrics" style="margin-bottom: 14px">
+                     <div class="metric">
+                        <span>ROs with backordered parts</span
+                        ><strong class="warn" id="backorderedPartsCount">—</strong>
+                     </div>
+                  </div>
+                  <div style="overflow-x: auto">
+                     <table>
+                        <thead>
+                           <tr>
+                              <th>RO</th>
+                              <th>Part #</th>
+                              <th>Description</th>
+                              <th>Status</th>
+                              <th>ETA</th>
+                           </tr>
+                        </thead>
+                        <tbody id="backorderedPartsQueue">
+                           <tr>
+                              <td colspan="5" class="muted">Loading backordered parts data…</td>
+                           </tr>
+                        </tbody>
+                     </table>
+                  </div>
                </div>
             </div>
          </section>
          <section class="section">
-            <h2>Uptime Assist</h2>
+            <div
+               class="section-header"
+               id="uptimeAssistHeader"
+               role="button"
+               tabindex="0"
+               aria-expanded="false"
+               aria-controls="uptimeAssistBody"
+               onclick="toggleSection(this)"
+               onkeydown="handleSectionHeaderKeydown(event, this)"
+            >
+               <h2>Uptime Assist</h2>
+               <div class="section-header-right">
+                  <span class="section-badge warn" id="uptimeAssistBadge">—</span>
+                  <span class="chevron" aria-hidden="true">⌄</span>
+               </div>
+            </div>
             <p class="note">Internal service follow-up queue.</p>
-            <div class="panel">
-               <div class="metrics" style="margin-bottom: 14px">
-                  <div class="metric">
-                     <span>Open follow-ups</span
-                     ><strong class="warn" id="uptimeAssistCount">—</strong>
+            <div class="collapsible-body collapsed" id="uptimeAssistBody">
+               <div class="panel">
+                  <div class="metrics" style="margin-bottom: 14px">
+                     <div class="metric">
+                        <span>Open follow-ups</span
+                        ><strong class="warn" id="uptimeAssistCount">—</strong>
+                     </div>
                   </div>
-               </div>
-               <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
-                  <table>
-                     <thead>
-                        <tr>
-                           <th>RO</th>
-                           <th>VIN</th>
-                           <th>Open Date</th>
-                           <th>Due Date</th>
-                           <th>Status</th>
-                        </tr>
-                     </thead>
-                     <tbody id="uptimeAssistQueue">
-                        <tr>
-                           <td colspan="5" class="muted">Loading Uptime Assist data…</td>
-                        </tr>
-                     </tbody>
-                  </table>
+                  <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
+                     <table>
+                        <thead>
+                           <tr>
+                              <th>RO</th>
+                              <th>VIN</th>
+                              <th>Open Date</th>
+                              <th>Due Date</th>
+                              <th>Status</th>
+                           </tr>
+                        </thead>
+                        <tbody id="uptimeAssistQueue">
+                           <tr>
+                              <td colspan="5" class="muted">Loading Uptime Assist data…</td>
+                           </tr>
+                        </tbody>
+                     </table>
+                  </div>
                </div>
             </div>
          </section>
          <section class="section">
-            <h2>Upcoming Appointments with PRI Parts</h2>
-            <p class="note"></p>
-            <div class="panel">
-               <div class="metrics" style="margin-bottom: 14px">
-                  <div class="metric">
-                     <span>Upcoming appointments</span
-                     ><strong class="warn" id="upcomingPriCount">—</strong>
-                  </div>
+            <div
+               class="section-header"
+               id="upcomingPriHeader"
+               role="button"
+               tabindex="0"
+               aria-expanded="false"
+               aria-controls="upcomingPriBody"
+               onclick="toggleSection(this)"
+               onkeydown="handleSectionHeaderKeydown(event, this)"
+            >
+               <h2>Upcoming Appointments with PRI Parts</h2>
+               <div class="section-header-right">
+                  <span class="section-badge warn" id="upcomingPriBadge">—</span>
+                  <span class="chevron" aria-hidden="true">⌄</span>
                </div>
-               <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
-                  <table>
-                     <thead>
-                        <tr>
-                           <th>Appt Date</th>
-                           <th>VIN</th>
-                           <th>Part #</th>
-                           <th>Status</th>
-                        </tr>
-                     </thead>
-                     <tbody id="upcomingPriQueue">
-                        <tr>
-                           <td colspan="4" class="muted">Loading upcoming appointments…</td>
-                        </tr>
-                     </tbody>
-                  </table>
+            </div>
+            <div class="collapsible-body collapsed" id="upcomingPriBody">
+               <div class="panel">
+                  <div class="metrics" style="margin-bottom: 14px">
+                     <div class="metric">
+                        <span>Upcoming appointments</span
+                        ><strong class="warn" id="upcomingPriCount">—</strong>
+                     </div>
+                  </div>
+                  <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
+                     <table>
+                        <thead>
+                           <tr>
+                              <th>Appt Date</th>
+                              <th>VIN</th>
+                              <th>Part #</th>
+                              <th>Status</th>
+                           </tr>
+                        </thead>
+                        <tbody id="upcomingPriQueue">
+                           <tr>
+                              <td colspan="4" class="muted">Loading upcoming appointments…</td>
+                           </tr>
+                        </tbody>
+                     </table>
+                  </div>
                </div>
             </div>
          </section>
          <section class="section">
-            <h2>Missed Opportunities</h2>
+            <div
+               class="section-header"
+               id="missedOpportunitiesHeader"
+               role="button"
+               tabindex="0"
+               aria-expanded="false"
+               aria-controls="missedOpportunitiesBody"
+               onclick="toggleSection(this)"
+               onkeydown="handleSectionHeaderKeydown(event, this)"
+            >
+               <h2>Missed Opportunities</h2>
+               <div class="section-header-right">
+                  <span class="section-badge" id="missedOpportunitiesBadge">—</span>
+                  <span class="chevron" aria-hidden="true">⌄</span>
+               </div>
+            </div>
             <p class="note">Per-advisor MPI+3 and missed-opportunity scorecard.</p>
-            <div class="panel">
-               <div class="metrics" style="margin-bottom: 14px">
-                  <div class="metric">
-                     <span>Service advisors reported</span
-                     ><strong class="warn" id="missedOpportunitiesCount">—</strong>
+            <div class="collapsible-body collapsed" id="missedOpportunitiesBody">
+               <div class="panel" id="missedOpportunitiesPanel">
+                  <div class="metrics" style="margin-bottom: 14px">
+                     <div class="metric">
+                        <span>Service advisors reported</span
+                        ><strong class="warn" id="missedOpportunitiesCount">—</strong>
+                     </div>
                   </div>
-               </div>
-               <div style="overflow-x: auto; overflow-y: auto; max-height: 360px">
-                  <table>
-                     <thead>
-                        <tr>
-                           <th>Dealer Code</th>
-                           <th>Service Advisor ID</th>
-                           <th>Total ROs</th>
-                           <th>CP Missed Opp.</th>
-                           <th>Missed Opp. (Warranty)</th>
-                           <th>Missed Opp. (Recall)</th>
-                           <th>Missed Opp. (Red Coding)</th>
-                           <th>Warr RO w/o CP &amp; Recall</th>
-                           <th>Recall RO w/o CP</th>
-                           <th>MPI+3 RO</th>
-                           <th>MPI+3 Utilization %</th>
-                           <th>Red Brake Count</th>
-                           <th>Red Battery Count</th>
-                           <th>Red Tire Count</th>
-                           <th>Red Wiper Count</th>
-                           <th>Red Cabin Air Filter Count</th>
-                           <th>Brake Penetration %</th>
-                           <th>Battery Penetration %</th>
-                           <th>Tire Penetration %</th>
-                           <th>Wiper Penetration %</th>
-                           <th>Cabin Air Filter Penetration %</th>
-                           <th>Red Brake 60d Return Rate</th>
-                           <th>Red Battery 60d Return Rate</th>
-                           <th>Red Tire 60d Return Rate</th>
-                           <th>Red Wiper 60d Return Rate</th>
-                           <th>Red Cabin Air 60d Return Rate</th>
-                           <th>Total VIN #</th>
-                           <th>Recall ROs Missing MPI+3</th>
-                           <th>Warranty ROs Missing MPI+3</th>
-                        </tr>
-                     </thead>
-                     <tbody id="missedOpportunitiesQueue">
-                        <tr>
-                           <td colspan="29" class="muted">Loading missed opportunities data…</td>
-                        </tr>
-                     </tbody>
-                  </table>
+                  <div class="tabs" role="tablist">
+                     <button type="button" class="tab-btn active" data-tab="moOverview" role="tab" aria-selected="true" onclick="showMissedOppTab('moOverview')">Overview</button>
+                     <button type="button" class="tab-btn" data-tab="moMissedOpp" role="tab" aria-selected="false" onclick="showMissedOppTab('moMissedOpp')">Missed Opportunities</button>
+                     <button type="button" class="tab-btn" data-tab="moRedTag" role="tab" aria-selected="false" onclick="showMissedOppTab('moRedTag')">Red Tag &amp; Penetration</button>
+                     <button type="button" class="tab-btn" data-tab="moReturnRate" role="tab" aria-selected="false" onclick="showMissedOppTab('moReturnRate')">60-Day Return Rates</button>
+                  </div>
+                  <div class="tab-panel" id="moOverview" style="overflow-x: auto; overflow-y: auto; max-height: 360px">
+                     <table>
+                        <thead>
+                           <tr>
+                              <th>Dealer Code</th>
+                              <th>Service Advisor ID</th>
+                              <th>Total ROs</th>
+                              <th>Total VIN #</th>
+                              <th>MPI+3 RO</th>
+                              <th>MPI+3 Utilization %</th>
+                           </tr>
+                        </thead>
+                        <tbody id="moOverviewQueue">
+                           <tr>
+                              <td colspan="6" class="muted">Loading missed opportunities data…</td>
+                           </tr>
+                        </tbody>
+                     </table>
+                  </div>
+                  <div class="tab-panel hidden" id="moMissedOpp" style="overflow-x: auto; overflow-y: auto; max-height: 360px">
+                     <table>
+                        <thead>
+                           <tr>
+                              <th>Dealer Code</th>
+                              <th>Service Advisor ID</th>
+                              <th>CP Missed Opp.</th>
+                              <th>Missed Opp. (Warranty)</th>
+                              <th>Missed Opp. (Recall)</th>
+                              <th>Missed Opp. (Red Coding)</th>
+                              <th>Warr RO w/o CP &amp; Recall</th>
+                              <th>Recall RO w/o CP</th>
+                              <th>Recall ROs Missing MPI+3</th>
+                              <th>Warranty ROs Missing MPI+3</th>
+                           </tr>
+                        </thead>
+                        <tbody id="moMissedOppQueue">
+                           <tr>
+                              <td colspan="10" class="muted">Loading missed opportunities data…</td>
+                           </tr>
+                        </tbody>
+                     </table>
+                  </div>
+                  <div class="tab-panel hidden" id="moRedTag" style="overflow-x: auto; overflow-y: auto; max-height: 360px">
+                     <table>
+                        <thead>
+                           <tr>
+                              <th>Dealer Code</th>
+                              <th>Service Advisor ID</th>
+                              <th>Red Brake Count</th>
+                              <th>Brake Penetration %</th>
+                              <th>Red Battery Count</th>
+                              <th>Battery Penetration %</th>
+                              <th>Red Tire Count</th>
+                              <th>Tire Penetration %</th>
+                              <th>Red Wiper Count</th>
+                              <th>Wiper Penetration %</th>
+                              <th>Red Cabin Air Filter Count</th>
+                              <th>Cabin Air Filter Penetration %</th>
+                           </tr>
+                        </thead>
+                        <tbody id="moRedTagQueue">
+                           <tr>
+                              <td colspan="12" class="muted">Loading missed opportunities data…</td>
+                           </tr>
+                        </tbody>
+                     </table>
+                  </div>
+                  <div class="tab-panel hidden" id="moReturnRate" style="overflow-x: auto; overflow-y: auto; max-height: 360px">
+                     <table>
+                        <thead>
+                           <tr>
+                              <th>Dealer Code</th>
+                              <th>Service Advisor ID</th>
+                              <th>Red Brake 60d Return Rate</th>
+                              <th>Red Battery 60d Return Rate</th>
+                              <th>Red Tire 60d Return Rate</th>
+                              <th>Red Wiper 60d Return Rate</th>
+                              <th>Red Cabin Air 60d Return Rate</th>
+                           </tr>
+                        </thead>
+                        <tbody id="moReturnRateQueue">
+                           <tr>
+                              <td colspan="7" class="muted">Loading missed opportunities data…</td>
+                           </tr>
+                        </tbody>
+                     </table>
+                  </div>
                </div>
             </div>
          </section>
@@ -690,6 +928,38 @@
                window.location.href = target;
             }
          });
+
+         // ==========================================
+         // COLLAPSIBLE SECTIONS
+         // ==========================================
+
+         /**
+          * Toggles a section header's expanded/collapsed state. `headerEl`
+          * is the clickable header div; its `aria-controls` attribute names
+          * the body element to show/hide.
+          */
+         function toggleSection(headerEl, forceExpanded) {
+            const bodyId = headerEl.getAttribute("aria-controls");
+            const body = bodyId ? document.getElementById(bodyId) : null;
+            if (!body) {
+               return;
+            }
+
+            const expanded =
+               typeof forceExpanded === "boolean"
+                  ? forceExpanded
+                  : headerEl.getAttribute("aria-expanded") !== "true";
+
+            headerEl.setAttribute("aria-expanded", String(expanded));
+            body.classList.toggle("collapsed", !expanded);
+         }
+
+         function handleSectionHeaderKeydown(event, headerEl) {
+            if (event.key === "Enter" || event.key === " ") {
+               event.preventDefault();
+               toggleSection(headerEl);
+            }
+         }
 
          // ==========================================
          // KPI MAPPING
@@ -943,6 +1213,7 @@
                .sort((a, b) => b.age - a.age);
 
             setValue("agedRoCount", String(agedRows.length));
+            setValue("agedRoBadge", `${agedRows.length} open`);
 
             if (!agedRows.length) {
                tbody.innerHTML =
@@ -999,6 +1270,7 @@
                console.error("Aged RO CSV Load Error:", error);
 
                setValue("agedRoCount", "—");
+               setValue("agedRoBadge", "—");
                setValue("agedRoTotal", "—");
                if (tbody) {
                   tbody.innerHTML =
@@ -1127,37 +1399,84 @@
             { fields: ["Status"] },
          ];
 
-         const MISSED_OPPORTUNITIES_COLUMNS = [
-            { fields: ["Dealer Code"] },
-            { fields: ["Service Advisor ID"] },
-            { fields: ["Total Repair Orders"], numeric: true },
-            { fields: ["Customer Pay Missed Opportunity"], numeric: true },
-            { fields: ["Missed Opportunity (Warranty)"], numeric: true },
-            { fields: ["Missed Opportunity (Recall)"], numeric: true },
-            { fields: ["Missed Opportunity (Red Coding)"], numeric: true },
-            { fields: ["Warr RO w/o CP and Recall"], numeric: true },
-            { fields: ["Recall RO w/o CP"], numeric: true },
-            { fields: ["MPI+3 RO"], numeric: true },
-            { fields: ["MPI+3 Utilization %"], format: percent, numeric: true },
-            { fields: ["Red Brake Count"], numeric: true },
-            { fields: ["Red Battery Count"], numeric: true },
-            { fields: ["Red Tire Count"], numeric: true },
-            { fields: ["Red Wiper Count"], numeric: true },
-            { fields: ["Red Cabin Air Filter Count"], numeric: true },
-            { fields: ["Brake Penetration %"], format: percent, numeric: true },
-            { fields: ["Battery Penetration %"], format: percent, numeric: true },
-            { fields: ["Tire Penetration %"], format: percent, numeric: true },
-            { fields: ["Wiper Penetration %"], format: percent, numeric: true },
-            { fields: ["Cabin Air Filter Penetration %"], format: percent, numeric: true },
-            { fields: ["Red Brake 60 day Return Rate"], format: percent, numeric: true },
-            { fields: ["Red Battery 60 day Return Rate"], format: percent, numeric: true },
-            { fields: ["Red Tire 60 day Return Rate"], format: percent, numeric: true },
-            { fields: ["Red Wiper 60 day Return Rate"], format: percent, numeric: true },
-            { fields: ["Red Cabin Air 60 day Return Rate"], format: percent, numeric: true },
-            { fields: ["Total VIN #"], numeric: true },
-            { fields: ["Recall ROs Missing MPI+3"], numeric: true },
-            { fields: ["Warranty ROs Missing MPI+3"], numeric: true },
+         // Missed Opportunities has ~29 columns in the source sheet — far
+         // too many for one table. Split into topic tabs that each repeat
+         // the two key columns (Dealer Code, Service Advisor ID) alongside
+         // a manageable set of related metrics.
+         const MISSED_OPP_GROUPS = [
+            {
+               tbodyId: "moOverviewQueue",
+               columns: [
+                  { fields: ["Dealer Code"] },
+                  { fields: ["Service Advisor ID"] },
+                  { fields: ["Total Repair Orders"], numeric: true },
+                  { fields: ["Total VIN #"], numeric: true },
+                  { fields: ["MPI+3 RO"], numeric: true },
+                  { fields: ["MPI+3 Utilization %"], format: percent, numeric: true },
+               ],
+            },
+            {
+               tbodyId: "moMissedOppQueue",
+               columns: [
+                  { fields: ["Dealer Code"] },
+                  { fields: ["Service Advisor ID"] },
+                  { fields: ["Customer Pay Missed Opportunity"], numeric: true },
+                  { fields: ["Missed Opportunity (Warranty)"], numeric: true },
+                  { fields: ["Missed Opportunity (Recall)"], numeric: true },
+                  { fields: ["Missed Opportunity (Red Coding)"], numeric: true },
+                  { fields: ["Warr RO w/o CP and Recall"], numeric: true },
+                  { fields: ["Recall RO w/o CP"], numeric: true },
+                  { fields: ["Recall ROs Missing MPI+3"], numeric: true },
+                  { fields: ["Warranty ROs Missing MPI+3"], numeric: true },
+               ],
+            },
+            {
+               tbodyId: "moRedTagQueue",
+               columns: [
+                  { fields: ["Dealer Code"] },
+                  { fields: ["Service Advisor ID"] },
+                  { fields: ["Red Brake Count"], numeric: true },
+                  { fields: ["Brake Penetration %"], format: percent, numeric: true },
+                  { fields: ["Red Battery Count"], numeric: true },
+                  { fields: ["Battery Penetration %"], format: percent, numeric: true },
+                  { fields: ["Red Tire Count"], numeric: true },
+                  { fields: ["Tire Penetration %"], format: percent, numeric: true },
+                  { fields: ["Red Wiper Count"], numeric: true },
+                  { fields: ["Wiper Penetration %"], format: percent, numeric: true },
+                  { fields: ["Red Cabin Air Filter Count"], numeric: true },
+                  { fields: ["Cabin Air Filter Penetration %"], format: percent, numeric: true },
+               ],
+            },
+            {
+               tbodyId: "moReturnRateQueue",
+               columns: [
+                  { fields: ["Dealer Code"] },
+                  { fields: ["Service Advisor ID"] },
+                  { fields: ["Red Brake 60 day Return Rate"], format: percent, numeric: true },
+                  { fields: ["Red Battery 60 day Return Rate"], format: percent, numeric: true },
+                  { fields: ["Red Tire 60 day Return Rate"], format: percent, numeric: true },
+                  { fields: ["Red Wiper 60 day Return Rate"], format: percent, numeric: true },
+                  { fields: ["Red Cabin Air 60 day Return Rate"], format: percent, numeric: true },
+               ],
+            },
          ];
+
+         function showMissedOppTab(tabId) {
+            const panel = document.getElementById("missedOpportunitiesPanel");
+            if (!panel) {
+               return;
+            }
+
+            panel.querySelectorAll(".tab-btn").forEach((btn) => {
+               const isActive = btn.dataset.tab === tabId;
+               btn.classList.toggle("active", isActive);
+               btn.setAttribute("aria-selected", String(isActive));
+            });
+
+            panel.querySelectorAll(".tab-panel").forEach((tabPanel) => {
+               tabPanel.classList.toggle("hidden", tabPanel.id !== tabId);
+            });
+         }
 
          function loadBackorderedPartsCsv() {
             return loadCsvList(
@@ -1166,7 +1485,11 @@
                BACKORDERED_PARTS_COLUMNS,
                "No ROs currently have backordered parts.",
                "backorderedPartsCount",
-            );
+            ).then(() => {
+               const count = document.getElementById("backorderedPartsCount");
+               const text = count ? count.textContent : "—";
+               setValue("backorderedPartsBadge", text === "—" ? "—" : `${text} ROs`);
+            });
          }
 
          function loadUptimeAssistCsv() {
@@ -1176,7 +1499,11 @@
                UPTIME_ASSIST_COLUMNS,
                "No open Uptime Assist follow-ups.",
                "uptimeAssistCount",
-            );
+            ).then(() => {
+               const count = document.getElementById("uptimeAssistCount");
+               const text = count ? count.textContent : "—";
+               setValue("uptimeAssistBadge", text === "—" ? "—" : `${text} open`);
+            });
          }
 
          function loadUpcomingPriCsv() {
@@ -1186,17 +1513,51 @@
                UPCOMING_PRI_COLUMNS,
                "No upcoming appointments with PRI parts.",
                "upcomingPriCount",
-            );
+            ).then(() => {
+               const count = document.getElementById("upcomingPriCount");
+               const text = count ? count.textContent : "—";
+               setValue("upcomingPriBadge", text === "—" ? "—" : `${text} upcoming`);
+            });
          }
 
-         function loadMissedOpportunitiesCsv() {
-            return loadCsvList(
-               MISSED_OPPORTUNITIES_CSV_PATH,
-               "missedOpportunitiesQueue",
-               MISSED_OPPORTUNITIES_COLUMNS,
-               "No missed opportunities data reported.",
-               "missedOpportunitiesCount",
-            );
+         async function loadMissedOpportunitiesCsv() {
+            try {
+               const response = await fetch(
+                  withCacheBust(MISSED_OPPORTUNITIES_CSV_PATH),
+                  { cache: "no-store" },
+               );
+
+               if (!response.ok) {
+                  throw new Error(`Unable to load CSV (${response.status})`);
+               }
+
+               const csvText = await response.text();
+               const records = parseCsv(csvText);
+
+               setValue("missedOpportunitiesCount", String(records.length));
+               setValue("missedOpportunitiesBadge", `${records.length} advisors`);
+
+               MISSED_OPP_GROUPS.forEach((group) => {
+                  renderRecordTable(
+                     group.tbodyId,
+                     records,
+                     group.columns,
+                     "No missed opportunities data reported.",
+                  );
+               });
+            } catch (error) {
+               console.error("CSV Load Error:", MISSED_OPPORTUNITIES_CSV_PATH, error);
+
+               setValue("missedOpportunitiesCount", "—");
+               setValue("missedOpportunitiesBadge", "—");
+
+               MISSED_OPP_GROUPS.forEach((group) => {
+                  const tbody = document.getElementById(group.tbodyId);
+                  if (tbody) {
+                     tbody.innerHTML = `<tr><td colspan="${group.columns.length}" class="muted">Unable to load data.</td></tr>`;
+                  }
+               });
+            }
          }
 
          const CLOSED_RO_WITH_PARTS_COLUMNS = [
@@ -1216,9 +1577,11 @@
             );
 
             const count = document.getElementById("closedRoWithPartsCount");
+            const countText = count ? count.textContent : "—";
+            setValue("closedRoWithPartsCountDetail", countText);
             setValue(
-               "closedRoWithPartsCountDetail",
-               count ? count.textContent : "—",
+               "closedRoWithPartsBadge",
+               countText === "—" ? "—" : `${countText} open`,
             );
          }
 
