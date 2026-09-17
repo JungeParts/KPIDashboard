@@ -57,7 +57,7 @@ blank or `0` rather than break the page.
 
 ## Feeds and their columns
 
-### Main KPI feed — `CSV_PATH` (`index.html` and `service-department.html`)
+### Main KPI feed — `CSV_PATH` (Parts & Service views in `index.html`)
 
 One data row with the latest values. Columns (accepted alternates in
 parentheses):
@@ -81,7 +81,7 @@ parentheses):
 | `InternalSales` (Internal Sales) | dollars |
 | `SalesByEP` (Sales By EP) | dollars |
 
-### Inventory aging — `AGING_CSV_PATH` (`index.html` only)
+### Inventory aging — `AGING_CSV_PATH` (Parts view in `index.html`)
 
 Sheet tab: `InventoryAgingbyValue`. One data row, the current aging-by-value
 split:
@@ -91,7 +91,7 @@ split:
 | `Aging6to11` (6-11 Months) | dollars |
 | `Aging12plus` (12+ Months) | dollars |
 
-### Open Purchase Orders — `OPEN_POS_CSV_PATH` (`index.html` only)
+### Open Purchase Orders — `OPEN_POS_CSV_PATH` (Parts view in `index.html`)
 
 One row per open PO. Every row shown as-is, no filtering.
 
@@ -104,7 +104,7 @@ One row per open PO. Every row shown as-is, no filtering.
 | `Status` |
 | `Amount` (PO Amount, Total) — dollars |
 
-### Aged Service ROs — `AGED_RO_CSV_PATH` (`service-department.html`)
+### Aged Service ROs — `AGED_RO_CSV_PATH` (Service view in `index.html`)
 
 One row per open RO. Only ROs at or above 30 days old show in the queue
 (`AGED_RO_THRESHOLD_DAYS`).
@@ -117,8 +117,9 @@ One row per open RO. Only ROs at or above 30 days old show in the queue
 | `Status` | |
 | `Description` (Part Description, or Part Number) | |
 | `Sale` (Sale Amount) | dollars |
+| `Advisor` (Service Advisor, Service Advisor ID) | powers the Service Advisor filter in the app bar — use the same ID/initials as the Missed Opportunities feed's `Service Advisor ID` so one dropdown selection matches rows across every feed |
 
-### Backordered Parts ROs — `BACKORDERED_PARTS_CSV_PATH` (`service-department.html`)
+### Backordered Parts ROs — `BACKORDERED_PARTS_CSV_PATH` (Service view in `index.html`)
 
 One row per backordered part. Every row shown as-is, no filtering.
 
@@ -129,27 +130,31 @@ One row per backordered part. Every row shown as-is, no filtering.
 | `Description` |
 | `Status` |
 | `ETA` (Backorder ETA, Expected) |
+| `Advisor` (Service Advisor, Service Advisor ID) — powers the Service Advisor filter, same ID scheme as the other feeds |
 
-### Uptime Assist — `UPTIME_ASSIST_CSV_PATH` (`service-department.html`)
+### Uptime Assist — `UPTIME_ASSIST_CSV_PATH` (Service view in `index.html`)
 
 | Column |
 |---|
-| `Customer` |
-| `Vehicle` |
-| `Reason` |
+| `RO` |
+| `VIN` |
+| `Open Date` |
 | `Due Date` |
 | `Status` |
+| `Advisor` (Service Advisor, Service Advisor ID) — powers the Service Advisor filter, same ID scheme as the other feeds |
 
-### Upcoming PRI Appointments — `UPCOMING_PRI_CSV_PATH` (`service-department.html`)
+### Upcoming PRI Appointments — `UPCOMING_PRI_CSV_PATH` (Service view in `index.html`)
+
+No `Advisor` column — this feed isn't affected by the Service Advisor filter.
 
 | Column |
 |---|
 | `Appt Date` (Appointment Date) |
-| `Customer` |
+| `VIN` |
 | `Part Number` (Part #) |
 | `Status` |
 
-### Closed ROs with Parts — `CLOSED_RO_WITH_PARTS_CSV_PATH` (`service-department.html`)
+### Closed ROs with Parts — `CLOSED_RO_WITH_PARTS_CSV_PATH` (Service view in `index.html`)
 
 Sheet tab: `ClosedROswithParts`. Critical list — ROs closed while parts
 remain attached. Every row shown as-is, no filtering.
@@ -160,8 +165,9 @@ remain attached. Every row shown as-is, no filtering.
 | `Close Date` |
 | `Status` |
 | `Customer` |
+| `Advisor` (Service Advisor, Service Advisor ID) — powers the Service Advisor filter, same ID scheme as the other feeds |
 
-### Missed Opportunities — `MISSED_OPPORTUNITIES_CSV_PATH` (`service-department.html`)
+### Missed Opportunities — `MISSED_OPPORTUNITIES_CSV_PATH` (Service view in `index.html`)
 
 One row per service advisor. Every row shown as-is, no filtering.
 
@@ -198,7 +204,7 @@ One row per service advisor. Every row shown as-is, no filtering.
 | `Warranty ROs Missing MPI+3` |
 
 
-### Trend history — `TREND_CSV_PATH` (`trend-analysis.html` only)
+### Trend history — `TREND_CSV_PATH` (Trends view in `index.html`)
 
 This feed works differently from every other one on this page: instead of
 one row that gets **overwritten** each time the numbers change, this tab
@@ -219,7 +225,7 @@ number moves over time. Row 1 is still the header row.
 | `Aging12plus` (12+ Months) | dollars |
 
 Set it up the same way as every other feed (see steps 1-5 above), then paste
-the CSV URL into `TREND_CSV_PATH` in `trend-analysis.html`.
+the CSV URL into `TREND_CSV_PATH` in `index.html`.
 
 **Adding a row every day.** The simplest approach: once a day, copy that
 day's values from the main `KPI` tab and the `InventoryAgingbyValue` tab
