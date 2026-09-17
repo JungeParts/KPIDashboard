@@ -372,7 +372,6 @@ function render() {
       document.getElementById("segService").classList.toggle("checked", state.dept === "service");
       document.querySelector('#segParts input').checked = state.dept === "parts";
       document.querySelector('#segService input').checked = state.dept === "service";
-      document.getElementById("svcAdvisorWrap").hidden = state.dept !== "service";
 
       if (state.dept === "parts") {
          PARTS_TAB_VIEWS.forEach((tab) => {
@@ -751,21 +750,35 @@ function collectAdvisors() {
    return [...advisors].sort();
 }
 
+// One advisor select sits at the top of each advisor-aware list (Closed,
+// Aged, Backorder, Uptime, Missed) rather than a single control in the app
+// bar — they all share svcData.advisor, so picking one syncs the rest.
 function populateAdvisorFilter() {
-   const select = document.getElementById("svcAdvisorFilter");
-   if (!select) return;
+   const selects = document.querySelectorAll(".svc-advisor-select");
+   if (!selects.length) return;
 
    const advisors = collectAdvisors();
    if (svcData.advisor && !advisors.includes(svcData.advisor)) {
       svcData.advisor = "";
    }
 
-   select.innerHTML =
+   const optionsHtml =
       '<option value="">All advisors</option>' +
       advisors.map((a) => `<option value="${escapeHtml(a)}"${a === svcData.advisor ? " selected" : ""}>${escapeHtml(a)}</option>`).join("");
+
+   selects.forEach((select) => {
+      select.innerHTML = optionsHtml;
+   });
+}
+
+function syncAdvisorSelects() {
+   document.querySelectorAll(".svc-advisor-select").forEach((select) => {
+      select.value = svcData.advisor;
+   });
 }
 
 function renderFilteredServiceViews() {
+   syncAdvisorSelects();
    renderClosedRoTable();
    renderAgedRoTable();
    renderBackorderTable();
@@ -775,9 +788,11 @@ function renderFilteredServiceViews() {
    renderSvcQueue();
 }
 
-document.getElementById("svcAdvisorFilter").addEventListener("change", (event) => {
-   svcData.advisor = event.target.value;
-   renderFilteredServiceViews();
+document.querySelectorAll(".svc-advisor-select").forEach((select) => {
+   select.addEventListener("change", (event) => {
+      svcData.advisor = event.target.value;
+      renderFilteredServiceViews();
+   });
 });
 
 async function refreshDailyData() {
@@ -815,6 +830,7 @@ const CLOSED_RO_WITH_PARTS_COLUMNS = [
    { fields: ["Close Date", "CloseDate"] },
    { fields: ["Status"] },
    { fields: ["Customer"] },
+   { fields: ADVISOR_FIELDS },
 ];
 
 function renderClosedRoTable() {
@@ -843,7 +859,7 @@ async function loadClosedRoWithPartsCsv() {
       setValue("closedRoWithPartsCountDetail", "—");
       setValue("closedRoWithPartsNote", "—");
       const tbody = document.getElementById("closedRoWithPartsQueue");
-      if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="muted">Unable to load data.</td></tr>';
+      if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="muted">Unable to load data.</td></tr>';
    }
 }
 
@@ -877,7 +893,7 @@ function renderAgedRoQueue(records) {
    setValue("agedRoNote", agedRows.length ? `oldest ${agedRows[0].age}d` : "none open");
 
    if (!agedRows.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="muted">No ROs currently open 10+ days.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="muted">No ROs currently open 10+ days.</td></tr>';
       setValue("agedRoTotal", currency(0));
       return;
    }
@@ -890,6 +906,7 @@ function renderAgedRoQueue(records) {
          const description =
             getFieldValue(record, ["Description", "Part Description"]) ||
             getFieldValue(record, ["Part Number", "PartNumber"]);
+         const advisor = getFieldValue(record, ADVISOR_FIELDS);
          const sale = parseNumber(getFieldValue(record, ["Sale", "Sale Amount"]));
          total += sale;
 
@@ -898,6 +915,7 @@ function renderAgedRoQueue(records) {
             <td>${age}d</td>
             <td>${escapeHtml(status)}</td>
             <td>${escapeHtml(description)}</td>
+            <td>${escapeHtml(advisor)}</td>
             <td class="num">${currency(sale)}</td>
          </tr>`;
       })
@@ -925,7 +943,7 @@ async function loadAgedRoCsv() {
       setValue("agedRoCount", "—");
       setValue("agedRoCountDetail", "—");
       setValue("agedRoTotal", "—");
-      if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="muted">Unable to load aged RO data.</td></tr>';
+      if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="muted">Unable to load aged RO data.</td></tr>';
    }
 }
 
@@ -935,6 +953,7 @@ const BACKORDERED_PARTS_COLUMNS = [
    { fields: ["Description"] },
    { fields: ["Status"] },
    { fields: ["ETA", "Backorder ETA", "Expected"] },
+   { fields: ADVISOR_FIELDS },
 ];
 
 function renderBackorderTable() {
@@ -961,7 +980,7 @@ async function loadBackorderedPartsCsv() {
       setValue("backorderedPartsCount", "—");
       setValue("backorderedPartsCountDetail", "—");
       const tbody = document.getElementById("backorderedPartsQueue");
-      if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="muted">Unable to load data.</td></tr>';
+      if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="muted">Unable to load data.</td></tr>';
    }
 }
 
@@ -971,6 +990,7 @@ const UPTIME_ASSIST_COLUMNS = [
    { fields: ["Open Date"] },
    { fields: ["Due Date", "DueDate"] },
    { fields: ["Status"] },
+   { fields: ADVISOR_FIELDS },
 ];
 
 function renderUptimeTable() {
@@ -995,7 +1015,7 @@ async function loadUptimeAssistCsv() {
       svcData.uptimeRaw = [];
       setValue("uptimeAssistCount", "—");
       const tbody = document.getElementById("uptimeAssistQueue");
-      if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="muted">Unable to load data.</td></tr>';
+      if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="muted">Unable to load data.</td></tr>';
    }
 }
 
