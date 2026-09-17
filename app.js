@@ -70,6 +70,10 @@ function parseNumber(value) {
    return Number(String(value || "").replace(/[^0-9.-]/g, "")) || 0;
 }
 
+function pluralize(count, word) {
+   return count === 1 ? word : `${word}s`;
+}
+
 function escapeHtml(value) {
    return String(value || "")
       .replace(/&/g, "&amp;")
@@ -368,6 +372,7 @@ function render() {
       document.getElementById("segService").classList.toggle("checked", state.dept === "service");
       document.querySelector('#segParts input').checked = state.dept === "parts";
       document.querySelector('#segService input').checked = state.dept === "service";
+      document.getElementById("svcAdvisorWrap").hidden = state.dept !== "service";
 
       if (state.dept === "parts") {
          PARTS_TAB_VIEWS.forEach((tab) => {
@@ -708,7 +713,72 @@ const svcData = {
    uptimeCount: 0,
    priCount: 0,
    missedCount: 0,
+   // Raw, unfiltered records for every feed that carries an Advisor column,
+   // kept around so the advisor filter can re-render client-side without
+   // re-fetching. Upcoming PRI has no advisor field, so it's not here.
+   closedRaw: [],
+   agedRawAll: [],
+   backorderRaw: [],
+   uptimeRaw: [],
+   missedRaw: [],
+   advisor: "", // "" = all advisors
 };
+
+// Header names accepted for the advisor column, in priority order. Missed
+// Opportunities already ships "Service Advisor ID"; the other feeds were
+// asked to add a plain "Advisor" column, so both are matched the same way
+// everywhere else in the app matches flexible headers.
+const ADVISOR_FIELDS = ["Advisor", "Service Advisor", "Service Advisor ID", "Advisor ID"];
+
+function filterByAdvisor(records) {
+   if (!svcData.advisor) return records;
+   return records.filter((record) => getFieldValue(record, ADVISOR_FIELDS) === svcData.advisor);
+}
+
+function collectAdvisors() {
+   const all = [
+      ...svcData.closedRaw,
+      ...svcData.agedRawAll,
+      ...svcData.backorderRaw,
+      ...svcData.uptimeRaw,
+      ...svcData.missedRaw,
+   ];
+   const advisors = new Set();
+   all.forEach((record) => {
+      const value = getFieldValue(record, ADVISOR_FIELDS);
+      if (value) advisors.add(value);
+   });
+   return [...advisors].sort();
+}
+
+function populateAdvisorFilter() {
+   const select = document.getElementById("svcAdvisorFilter");
+   if (!select) return;
+
+   const advisors = collectAdvisors();
+   if (svcData.advisor && !advisors.includes(svcData.advisor)) {
+      svcData.advisor = "";
+   }
+
+   select.innerHTML =
+      '<option value="">All advisors</option>' +
+      advisors.map((a) => `<option value="${escapeHtml(a)}"${a === svcData.advisor ? " selected" : ""}>${escapeHtml(a)}</option>`).join("");
+}
+
+function renderFilteredServiceViews() {
+   renderClosedRoTable();
+   renderAgedRoTable();
+   renderBackorderTable();
+   renderUptimeTable();
+   renderMissedOppTables();
+   renderSvcHero();
+   renderSvcQueue();
+}
+
+document.getElementById("svcAdvisorFilter").addEventListener("change", (event) => {
+   svcData.advisor = event.target.value;
+   renderFilteredServiceViews();
+});
 
 async function refreshDailyData() {
    const btn = document.getElementById("refreshBtn");
@@ -729,6 +799,7 @@ async function refreshDailyData() {
          loadUpcomingPriCsv(),
          loadMissedOpportunitiesCsv(),
       ]);
+      populateAdvisorFilter();
       renderSvcHero();
       renderSvcQueue();
    } finally {
@@ -746,19 +817,34 @@ const CLOSED_RO_WITH_PARTS_COLUMNS = [
    { fields: ["Customer"] },
 ];
 
-async function loadClosedRoWithPartsCsv() {
-   const records = await loadCsvList(
-      CLOSED_RO_WITH_PARTS_CSV_PATH,
-      "closedRoWithPartsQueue",
-      CLOSED_RO_WITH_PARTS_COLUMNS,
-      "No closed ROs currently have parts attached.",
-      null,
-   );
+function renderClosedRoTable() {
+   const filtered = filterByAdvisor(svcData.closedRaw);
+   renderRecordTable("closedRoWithPartsQueue", filtered, CLOSED_RO_WITH_PARTS_COLUMNS, "No closed ROs currently have parts attached.");
 
-   svcData.closedCount = records.length;
-   setValue("closedRoWithPartsCount", String(records.length));
-   setValue("closedRoWithPartsCountDetail", String(records.length));
-   setValue("closedRoWithPartsNote", records.length ? "critical" : "none open");
+   svcData.closedCount = filtered.length;
+   setValue("closedRoWithPartsCount", String(filtered.length));
+   setValue("closedRoWithPartsCountDetail", String(filtered.length));
+   setValue("closedRoWithPartsNote", filtered.length ? "critical" : "none open");
+}
+
+async function loadClosedRoWithPartsCsv() {
+   try {
+      const response = await fetch(withCacheBust(CLOSED_RO_WITH_PARTS_CSV_PATH), { cache: "no-store" });
+      if (!response.ok) throw new Error(`Unable to load CSV (${response.status})`);
+
+      const csvText = await response.text();
+      svcData.closedRaw = parseCsv(csvText);
+      renderClosedRoTable();
+   } catch (error) {
+      console.error("CSV Load Error:", CLOSED_RO_WITH_PARTS_CSV_PATH, error);
+
+      svcData.closedRaw = [];
+      setValue("closedRoWithPartsCount", "—");
+      setValue("closedRoWithPartsCountDetail", "—");
+      setValue("closedRoWithPartsNote", "—");
+      const tbody = document.getElementById("closedRoWithPartsQueue");
+      if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="muted">Unable to load data.</td></tr>';
+   }
 }
 
 /** Age in days for a single RO record. Prefers an explicit Age Days column; falls back to Open Date. */
@@ -820,6 +906,10 @@ function renderAgedRoQueue(records) {
    setValue("agedRoTotal", currency(total));
 }
 
+function renderAgedRoTable() {
+   renderAgedRoQueue(filterByAdvisor(svcData.agedRawAll));
+}
+
 async function loadAgedRoCsv() {
    const tbody = document.getElementById("agedRoQueue");
    try {
@@ -827,9 +917,11 @@ async function loadAgedRoCsv() {
       if (!response.ok) throw new Error(`Unable to load aged RO CSV (${response.status})`);
 
       const csvText = await response.text();
-      renderAgedRoQueue(parseCsv(csvText));
+      svcData.agedRawAll = parseCsv(csvText);
+      renderAgedRoTable();
    } catch (error) {
       console.error("Aged RO CSV Load Error:", error);
+      svcData.agedRawAll = [];
       setValue("agedRoCount", "—");
       setValue("agedRoCountDetail", "—");
       setValue("agedRoTotal", "—");
@@ -845,17 +937,32 @@ const BACKORDERED_PARTS_COLUMNS = [
    { fields: ["ETA", "Backorder ETA", "Expected"] },
 ];
 
+function renderBackorderTable() {
+   const filtered = filterByAdvisor(svcData.backorderRaw);
+   renderRecordTable("backorderedPartsQueue", filtered, BACKORDERED_PARTS_COLUMNS, "No ROs currently have backordered parts.");
+
+   svcData.backorderCount = filtered.length;
+   setValue("backorderedPartsCount", String(filtered.length));
+   setValue("backorderedPartsCountDetail", String(filtered.length));
+}
+
 async function loadBackorderedPartsCsv() {
-   const records = await loadCsvList(
-      BACKORDERED_PARTS_CSV_PATH,
-      "backorderedPartsQueue",
-      BACKORDERED_PARTS_COLUMNS,
-      "No ROs currently have backordered parts.",
-      null,
-   );
-   svcData.backorderCount = records.length;
-   setValue("backorderedPartsCount", String(records.length));
-   setValue("backorderedPartsCountDetail", String(records.length));
+   try {
+      const response = await fetch(withCacheBust(BACKORDERED_PARTS_CSV_PATH), { cache: "no-store" });
+      if (!response.ok) throw new Error(`Unable to load CSV (${response.status})`);
+
+      const csvText = await response.text();
+      svcData.backorderRaw = parseCsv(csvText);
+      renderBackorderTable();
+   } catch (error) {
+      console.error("CSV Load Error:", BACKORDERED_PARTS_CSV_PATH, error);
+
+      svcData.backorderRaw = [];
+      setValue("backorderedPartsCount", "—");
+      setValue("backorderedPartsCountDetail", "—");
+      const tbody = document.getElementById("backorderedPartsQueue");
+      if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="muted">Unable to load data.</td></tr>';
+   }
 }
 
 const UPTIME_ASSIST_COLUMNS = [
@@ -866,15 +973,30 @@ const UPTIME_ASSIST_COLUMNS = [
    { fields: ["Status"] },
 ];
 
+function renderUptimeTable() {
+   const filtered = filterByAdvisor(svcData.uptimeRaw);
+   renderRecordTable("uptimeAssistQueue", filtered, UPTIME_ASSIST_COLUMNS, "No open Uptime Assist follow-ups.");
+
+   svcData.uptimeCount = filtered.length;
+   setValue("uptimeAssistCount", String(filtered.length));
+}
+
 async function loadUptimeAssistCsv() {
-   const records = await loadCsvList(
-      UPTIME_ASSIST_CSV_PATH,
-      "uptimeAssistQueue",
-      UPTIME_ASSIST_COLUMNS,
-      "No open Uptime Assist follow-ups.",
-      "uptimeAssistCount",
-   );
-   svcData.uptimeCount = records.length;
+   try {
+      const response = await fetch(withCacheBust(UPTIME_ASSIST_CSV_PATH), { cache: "no-store" });
+      if (!response.ok) throw new Error(`Unable to load CSV (${response.status})`);
+
+      const csvText = await response.text();
+      svcData.uptimeRaw = parseCsv(csvText);
+      renderUptimeTable();
+   } catch (error) {
+      console.error("CSV Load Error:", UPTIME_ASSIST_CSV_PATH, error);
+
+      svcData.uptimeRaw = [];
+      setValue("uptimeAssistCount", "—");
+      const tbody = document.getElementById("uptimeAssistQueue");
+      if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="muted">Unable to load data.</td></tr>';
+   }
 }
 
 const UPCOMING_PRI_COLUMNS = [
@@ -972,23 +1094,28 @@ function showMissedOppTab(tabId) {
    });
 }
 
+function renderMissedOppTables() {
+   const filtered = filterByAdvisor(svcData.missedRaw);
+   svcData.missedCount = filtered.length;
+   setValue("missedOpportunitiesCount", String(filtered.length));
+
+   MISSED_OPP_GROUPS.forEach((group) => {
+      renderRecordTable(group.tbodyId, filtered, group.columns, "No missed opportunities data reported.");
+   });
+}
+
 async function loadMissedOpportunitiesCsv() {
    try {
       const response = await fetch(withCacheBust(MISSED_OPPORTUNITIES_CSV_PATH), { cache: "no-store" });
       if (!response.ok) throw new Error(`Unable to load CSV (${response.status})`);
 
       const csvText = await response.text();
-      const records = parseCsv(csvText);
-
-      svcData.missedCount = records.length;
-      setValue("missedOpportunitiesCount", String(records.length));
-
-      MISSED_OPP_GROUPS.forEach((group) => {
-         renderRecordTable(group.tbodyId, records, group.columns, "No missed opportunities data reported.");
-      });
+      svcData.missedRaw = parseCsv(csvText);
+      renderMissedOppTables();
    } catch (error) {
       console.error("CSV Load Error:", MISSED_OPPORTUNITIES_CSV_PATH, error);
 
+      svcData.missedRaw = [];
       svcData.missedCount = 0;
       setValue("missedOpportunitiesCount", "—");
 
@@ -1014,7 +1141,7 @@ function renderSvcHero() {
       cards.push(
          svcHeroCard(
             "Act now",
-            `${svcData.closedCount} closed ROs with open parts`,
+            `${svcData.closedCount} closed ${pluralize(svcData.closedCount, "RO")} with open parts`,
             "Parts still attached to a closed RO",
             "bad",
             "service:closed",
@@ -1027,7 +1154,7 @@ function renderSvcHero() {
       cards.push(
          svcHeroCard(
             "Act now",
-            `${svcData.agedRows.length} ROs open 10+ days`,
+            `${svcData.agedRows.length} ${pluralize(svcData.agedRows.length, "RO")} open 10+ days`,
             `Oldest ${oldest} days`,
             "bad",
             "service:aged",
@@ -1039,7 +1166,7 @@ function renderSvcHero() {
       cards.push(
          svcHeroCard(
             "Watch",
-            `${svcData.backorderCount} ROs waiting on parts`,
+            `${svcData.backorderCount} ${pluralize(svcData.backorderCount, "RO")} waiting on parts`,
             "Parts on backorder",
             "watch",
             "service:backorder",
