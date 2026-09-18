@@ -784,6 +784,7 @@ function renderFilteredServiceViews() {
    renderBackorderTable();
    renderUptimeTable();
    renderMissedOppTables();
+   renderSvcHero();
    renderSvcQueue();
 }
 
@@ -814,6 +815,7 @@ async function refreshDailyData() {
          loadMissedOpportunitiesCsv(),
       ]);
       populateAdvisorFilter();
+      renderSvcHero();
       renderSvcQueue();
    } finally {
       if (btn) {
@@ -1144,8 +1146,67 @@ async function loadMissedOpportunitiesCsv() {
    }
 }
 
+function svcHeroCard(kicker, title, sub, tone, jump) {
+   return `<button type="button" class="hero-card ${tone === "bad" ? "tone-bad" : ""}" data-jump="${jump}">
+      <div class="hero-kicker">${kicker}</div>
+      <div class="hero-title">${escapeHtml(title)}</div>
+      <div class="hero-sub">${escapeHtml(sub)}</div>
+   </button>`;
+}
+
+function renderSvcHero() {
+   const cards = [];
+
+   if (svcData.closedCount > 0) {
+      cards.push(
+         svcHeroCard(
+            "Act now",
+            `${svcData.closedCount} closed ${pluralize(svcData.closedCount, "RO")} with open parts`,
+            "Parts still attached to a closed RO",
+            "bad",
+            "service:closed",
+         ),
+      );
+   }
+
+   if (svcData.agedRows.length > 0) {
+      const oldest = svcData.agedRows[0].age;
+      cards.push(
+         svcHeroCard(
+            "Act now",
+            `${svcData.agedRows.length} ${pluralize(svcData.agedRows.length, "RO")} open 10+ days`,
+            `Oldest ${oldest} days`,
+            "bad",
+            "service:aged",
+         ),
+      );
+   }
+
+   if (svcData.backorderCount > 0) {
+      cards.push(
+         svcHeroCard(
+            "Watch",
+            `${svcData.backorderCount} ${pluralize(svcData.backorderCount, "RO")} waiting on parts`,
+            "Parts on backorder",
+            "watch",
+            "service:backorder",
+         ),
+      );
+   }
+
+   const hero = document.getElementById("svcHero");
+   hero.innerHTML =
+      `<div class="hero-count"><strong>${cards.length}</strong><span>Need action today</span></div>` +
+      (cards.length ? cards.join("") : `<div class="hero-empty">No open service exceptions right now.</div>`);
+
+   wireJumpButtons(hero);
+}
+
 function renderSvcQueue() {
    const rows = [
+      { count: String(svcData.closedCount), label: "Closed ROs with open parts", note: "critical", tone: "var(--r)", jump: "service:closed", show: svcData.closedCount > 0 },
+      { count: String(svcData.agedRows.length), label: "ROs open 10+ days", note: svcData.agedRows[0] ? `oldest ${svcData.agedRows[0].age}d` : "", tone: "var(--r)", jump: "service:aged", show: svcData.agedRows.length > 0 },
+      { count: String(svcData.backorderCount), label: "ROs waiting on parts", note: "backordered", tone: "var(--a)", jump: "service:backorder", show: svcData.backorderCount > 0 },
       { count: String(svcData.uptimeCount), label: "Uptime Assist follow-ups", note: "open", tone: "var(--a)", jump: "service:uptime", show: svcData.uptimeCount > 0 },
       { count: String(svcData.priCount), label: "Upcoming appts with PRI parts", note: "next 7 days", tone: "var(--s)", jump: "service:pri", show: svcData.priCount > 0 },
    ].filter((row) => row.show);
