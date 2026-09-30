@@ -243,7 +243,7 @@ function wireTableFilter(inputId, tbodyId) {
 // ==========================================
 
 const state = {
-   nav: "daily", // daily | returns | trends
+   nav: "daily", // daily | returns | trends | basenumbers
    dept: "parts", // parts | service
    partsTab: "overview",
    svcTab: "overview",
@@ -256,6 +256,7 @@ function parseHash() {
    const segments = (location.hash || "").replace(/^#\/?/, "").split("/").filter(Boolean);
    if (segments[0] === "returns") return { nav: "returns" };
    if (segments[0] === "trends") return { nav: "trends" };
+   if (segments[0] === "basenumbers") return { nav: "basenumbers" };
    if (segments[0] === "daily") {
       const dept = segments[1] === "service" ? "service" : "parts";
       const tabList = dept === "service" ? SVC_TAB_VIEWS : PARTS_TAB_VIEWS;
@@ -308,6 +309,9 @@ function navigate(nav) {
          setMetaLine("Data through —");
          refreshTrendData();
       }
+   } else if (nav === "basenumbers") {
+      setMetaLine("Ford parts base number reference");
+      document.getElementById("baseSearch").focus();
    } else if (nav === "daily") {
       setMetaLine(lastDailyMeta.text, lastDailyMeta.isError);
    }
@@ -342,6 +346,7 @@ const APP_TITLES = {
    daily: { parts: "Parts Daily", service: "Service Daily" },
    returns: "Part Return Claims",
    trends: "Trend Analysis",
+   basenumbers: "Ford Base Number Search",
 };
 
 function render() {
@@ -354,6 +359,7 @@ function render() {
    document.getElementById("dailyView").hidden = state.nav !== "daily";
    document.getElementById("returnsView").hidden = state.nav !== "returns";
    document.getElementById("trendsView").hidden = state.nav !== "trends";
+   document.getElementById("basenumbersView").hidden = state.nav !== "basenumbers";
 
    // Appbar control clusters
    document.getElementById("dailyControls").hidden = state.nav !== "daily";
@@ -1799,6 +1805,67 @@ document.getElementById("rangeSelect").addEventListener("change", () => {
 });
 
 // ==========================================
+// FORD BASE NUMBER SEARCH
+// ==========================================
+
+/** Lowercase alphanumerics only, so "BT4Z-2208-A" matches "bt4z2208a". */
+function compactText(value) {
+   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+const baseIndex = FORD_BASE_NUMBERS.map(([section, desc, base]) => {
+   const text = `${desc} ${base}`.toLowerCase();
+   return { section: FORD_BASE_SECTIONS[section], desc, base, text, compact: compactText(text) };
+});
+
+function highlightTerms(value, terms) {
+   if (!terms.length) return escapeHtml(value);
+   const pattern = new RegExp(`(${terms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
+   // Split on the raw text so escaping can never break a <mark> apart.
+   return value
+      .split(pattern)
+      .map((part, i) => (i % 2 ? `<mark>${escapeHtml(part)}</mark>` : escapeHtml(part)))
+      .join("");
+}
+
+function renderBaseSearch() {
+   const query = document.getElementById("baseSearch").value.trim().toLowerCase();
+   const terms = query.split(/\s+/).filter(Boolean);
+   // Every word must match, either as typed or ignoring dashes/spaces/asterisks.
+   const matches = terms.length
+      ? baseIndex.filter((row) =>
+           terms.every((term) => row.text.includes(term) || row.compact.includes(compactText(term) || term)),
+        )
+      : baseIndex;
+
+   const body = document.getElementById("baseResults");
+   if (!matches.length) {
+      body.innerHTML = `<tr><td colspan="3" class="muted">No parts match “${escapeHtml(query)}”.</td></tr>`;
+   } else {
+      body.innerHTML = matches
+         .map(
+            (row) => `<tr>
+            <td>${highlightTerms(row.desc, terms)}</td>
+            <td>${row.base ? highlightTerms(row.base, terms) : '<span class="muted">—</span>'}</td>
+            <td>${escapeHtml(row.section)}</td>
+         </tr>`,
+         )
+         .join("");
+   }
+
+   document.getElementById("baseSearchSummary").textContent = terms.length
+      ? `${matches.length.toLocaleString()} of ${baseIndex.length.toLocaleString()} entries match`
+      : `${baseIndex.length.toLocaleString()} entries · search by description or base number`;
+}
+
+let baseSearchTimer = null;
+document.getElementById("baseSearch").addEventListener("input", () => {
+   clearTimeout(baseSearchTimer);
+   baseSearchTimer = setTimeout(renderBaseSearch, 80);
+});
+renderBaseSearch();
+
+// ==========================================
 // STARTUP
 // ==========================================
 
@@ -1832,6 +1899,9 @@ window.addEventListener("load", function () {
    }
    if (state.nav === "trends") {
       refreshTrendData();
+   }
+   if (state.nav === "basenumbers") {
+      setMetaLine("Ford parts base number reference");
    }
 
    if (REFRESH_INTERVAL_MS > 0) {
