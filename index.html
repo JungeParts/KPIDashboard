@@ -715,6 +715,48 @@
             margin-right: auto;
             min-width: 0;
          }
+         .base-search {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid var(--l);
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            color: var(--text);
+            font: inherit;
+            font-size: 15px;
+         }
+         .base-search:focus {
+            outline: 2px solid color-mix(in srgb, var(--b) 45%, transparent);
+            outline-offset: 1px;
+         }
+         .base-table {
+            max-height: calc(100vh - 290px);
+            min-height: 240px;
+         }
+         .base-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+         }
+         .base-table td:nth-child(2) {
+            font-weight: 600;
+            color: var(--n);
+         }
+         .base-table td:nth-child(3) {
+            color: var(--s);
+            white-space: nowrap;
+         }
+         @media (max-width: 560px) {
+            .base-table th:nth-child(3),
+            .base-table td:nth-child(3) {
+               display: none;
+            }
+         }
+         .base-table mark {
+            background: color-mix(in srgb, var(--b) 22%, transparent);
+            color: inherit;
+            border-radius: 2px;
+         }
          .filter-row input[type="text"] {
             width: 240px;
             max-width: 100%;
@@ -993,6 +1035,10 @@
             <button type="button" class="rail-btn" data-nav="trends" title="Trend analysis">
                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
                <span>Trends</span>
+            </button>
+            <button type="button" class="rail-btn" data-nav="basenumbers" title="Ford base number search">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/><path d="M9.5 8.5l-1 5M12.5 8.5l-1 5M8 10h5M7.5 12h5"/></svg>
+               <span>Base #</span>
             </button>
             <div class="rail-spacer"></div>
             <button
@@ -1495,6 +1541,41 @@
                </div>
             </div>
 
+            <!-- ================= FORD BASE NUMBERS ================= -->
+            <div class="view" id="basenumbersView" hidden>
+               <div class="view-body">
+                  <div class="filter-row">
+                     <div class="grow">
+                        <h3 style="margin: 0 0 2px; font-size: 15px; color: var(--n)">Ford base numbers</h3>
+                        <div class="sub" id="baseSearchSummary">—</div>
+                     </div>
+                  </div>
+                  <input
+                     type="search"
+                     id="baseSearch"
+                     class="base-search"
+                     placeholder="Search by description or base number (e.g. oil filter, 9601, 7A098)"
+                     autocomplete="off"
+                     spellcheck="false"
+                  />
+                  <p class="note" style="margin: 0">Light and mirror part numbers ending in an odd number are left side, even are right side.</p>
+                  <div class="panel" style="padding: 4px 13px 9px">
+                     <div class="table-scroll base-table">
+                        <table>
+                           <thead>
+                              <tr>
+                                 <th>Description</th>
+                                 <th>Base number / notes</th>
+                                 <th>Section</th>
+                              </tr>
+                           </thead>
+                           <tbody id="baseResults"></tbody>
+                        </table>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
             <footer class="footer">
                Created by Sam Glidewell - Junge Automotive Group 2026
             </footer>
@@ -1519,6 +1600,7 @@
          const CLAIMS_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/PartReturnClaims.csv";
          const REFRESH_INTERVAL_MS = 300000;
       </script>
+      <script src="ford-base-numbers.js"></script>
       <script src="app.js"></script>
    </body>
 </html>
