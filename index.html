@@ -1065,8 +1065,8 @@
                   <div class="appbar-controls" id="dailyControls">
                      <label class="sub"
                         >Location
-                        <select>
-                           <option>Junge North Liberty</option>
+                        <select id="storeSelect" aria-label="Store">
+                           <option value="nl">Junge North Liberty</option>
                         </select></label
                      >
                      <div class="seg" role="group" aria-label="Department">
@@ -1586,6 +1586,17 @@
          // ==========================================
          // CONFIG — every feed the dashboard reads. See GOOGLE_SHEETS_SETUP.md.
          // ==========================================
+
+         // Stores sharing this dashboard. Every Sheets tab has a "Store" column;
+         // the dashboard shows only the selected store's rows. `name` must match
+         // the Store column text. Rows with a blank Store count as DEFAULT_STORE_ID.
+         // Pick a store with the Location menu, or link straight to one: index.html?store=cr
+         const STORES = [
+            { id: "nl", name: "North Liberty", label: "Junge North Liberty" },
+            { id: "cr", name: "Cedar Rapids", label: "Junge Cedar Rapids" },
+         ];
+         const DEFAULT_STORE_ID = "nl";
+
          const CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=0";
          const AGING_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=67671052";
          const OPEN_POS_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=548227864";

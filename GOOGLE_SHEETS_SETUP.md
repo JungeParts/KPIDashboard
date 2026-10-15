@@ -55,6 +55,30 @@ few common alternate wordings are accepted, but the header text still has
 to be recognizable. If a column can't be matched, that card/row will show
 blank or `0` rather than break the page.
 
+## Multiple stores (North Liberty + Cedar Rapids)
+
+Both stores share the same workbook and the same tabs. Every tab has a
+**`Store`** column (added as the last column) holding the store name exactly
+as it appears in `STORES` in `index.html` — `North Liberty` or `Cedar Rapids`.
+
+- The dashboard shows only the rows for the store picked in the **Location**
+  menu. Each store can bookmark its own view: `index.html?store=nl` or
+  `index.html?store=cr`. The choice is also remembered on that device.
+- A blank `Store` cell counts as North Liberty (`DEFAULT_STORE_ID`), so tabs
+  that predate the column keep working.
+- `PartsKPIs` and `InventoryAgingbyValue` have **one row per store**; the
+  dashboard reads the row for the selected store.
+- `History` gets one row per store per day.
+- Feeds with no `Store` column (e.g. `PartReturnClaims.csv`) are shared and
+  show the same data for both stores.
+- Tabs filled by the importer script are stamped with the store
+  automatically. On hand-maintained tabs (`BackorderedPartsROs`,
+  `ClosedROswithParts`, `MissedOpportunities`, `InventoryAgingbyValue`,
+  and the manual `PartsKPIs` cells) fill in `Store` on each row you add.
+
+To add another store later, add it to `STORES` in `index.html` and use the
+same name in the sheet's `Store` column.
+
 ## Feeds and their columns
 
 ### Main KPI feed — `CSV_PATH` (Parts & Service views in `index.html`)

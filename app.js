@@ -1,4 +1,79 @@
 // ==========================================
+// STORE (multi-location)
+// ==========================================
+
+const STORE_STORAGE_KEY = "kpiDashboardStore";
+
+function storeList() {
+   return typeof STORES !== "undefined" && STORES.length
+      ? STORES
+      : [{ id: "nl", name: "North Liberty", label: "Junge North Liberty" }];
+}
+
+function defaultStoreId() {
+   return typeof DEFAULT_STORE_ID !== "undefined" ? DEFAULT_STORE_ID : storeList()[0].id;
+}
+
+/** Selected store: ?store= in the URL wins, then the last choice on this device, then the default. */
+function resolveCurrentStore() {
+   const stores = storeList();
+   const byId = (id) => stores.find((s) => s.id === String(id || "").toLowerCase());
+   let saved = null;
+   try {
+      saved = localStorage.getItem(STORE_STORAGE_KEY);
+   } catch (e) {
+      /* storage unavailable: fall through to default */
+   }
+   return (
+      byId(new URLSearchParams(location.search).get("store")) ||
+      byId(saved) ||
+      byId(defaultStoreId()) ||
+      stores[0]
+   );
+}
+
+const CURRENT_STORE = resolveCurrentStore();
+
+function normalizeStoreText(value) {
+   return String(value || "")
+      .toLowerCase()
+      .replace(/^junge\s+/, "")
+      .trim();
+}
+
+/** True when a row's Store cell belongs to the selected store. Blank = default store. */
+function rowIsForCurrentStore(storeCell) {
+   const v = normalizeStoreText(storeCell);
+   if (!v) return CURRENT_STORE.id === defaultStoreId();
+   return (
+      v === CURRENT_STORE.id ||
+      v === normalizeStoreText(CURRENT_STORE.name) ||
+      v === normalizeStoreText(CURRENT_STORE.label)
+   );
+}
+
+function initStoreSelect() {
+   const select = document.getElementById("storeSelect");
+   if (!select) return;
+   select.innerHTML = storeList()
+      .map((s) => `<option value="${s.id}">${escapeHtml(s.label || s.name)}</option>`)
+      .join("");
+   select.value = CURRENT_STORE.id;
+   select.addEventListener("change", () => {
+      try {
+         localStorage.setItem(STORE_STORAGE_KEY, select.value);
+      } catch (e) {
+         /* not remembered on this device; the URL still carries the choice */
+      }
+      // Reload with ?store= so every feed, chart and advisor filter is rebuilt for the new store.
+      const url = new URL(location.href);
+      url.searchParams.set("store", select.value);
+      location.assign(url.toString());
+   });
+   document.title = `${document.title.replace(/ — .*$/, "")} — ${CURRENT_STORE.name}`;
+}
+
+// ==========================================
 // THEME
 // ==========================================
 
@@ -141,9 +216,14 @@ function parseCsv(csvText) {
 
    const headers = rows.shift() || [];
 
-   return rows.map((rowData) =>
+   const records = rows.map((rowData) =>
       Object.fromEntries(headers.map((header, index) => [header.trim(), rowData[index] || ""])),
    );
+
+   // Multi-store sheets: keep only the selected store's rows. Feeds without a
+   // Store column (e.g. the claims CSV) are shared and pass through unchanged.
+   const storeKey = headers.map((h) => h.trim()).find((h) => h.toLowerCase() === "store");
+   return storeKey ? records.filter((record) => rowIsForCurrentStore(record[storeKey])) : records;
 }
 
 /**
@@ -1885,6 +1965,7 @@ wireJumpButtons(document);
 wireTableFilter("posFilter", "openPosQueue");
 
 window.addEventListener("load", function () {
+   initStoreSelect();
    const route = parseHash();
    if (route) {
       applyRoute(route);
