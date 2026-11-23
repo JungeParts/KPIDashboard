@@ -1076,7 +1076,7 @@
                            ><input type="radio" name="dept" value="service" />Service</label
                         >
                      </div>
-                     <button id="refreshBtn" class="btn" type="button" onclick="refreshDailyData()">
+                     <button id="refreshBtn" class="btn" type="button" onclick="refreshDailyData({ runSheetUpdate: true })">
                         <span class="btn-spin" aria-hidden="true">
                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
                         </span>
@@ -1610,6 +1610,10 @@
          const TREND_CSV_PATH = "https://docs.google.com/spreadsheets/d/1q5nF5OF2jBYp8RP-_WSZCq5y2xv_aWKdifT_fbkS-1Q/gviz/tq?tqx=out:csv&gid=902713062";
          const CLAIMS_CSV_PATH = "https://raw.githubusercontent.com/JungeParts/KPIDashboard/main/PartReturnClaims.csv";
          const REFRESH_INTERVAL_MS = 300000;
+         // Apps Script web app URL (ends in /exec) that runs the sheet's auto-updater
+         // when "Refresh KPI Data" is clicked. Leave empty to just re-read the sheet.
+         // Setup: GOOGLE_SHEETS_SETUP.md → "Running the auto-updater from the Refresh button".
+         const SHEETS_UPDATE_URL = "";
       </script>
       <script src="ford-base-numbers.js"></script>
       <script src="app.js"></script>

@@ -294,6 +294,80 @@ function snapshotDailyHistory() {
 Adjust the sheet/tab names and column names in the script to match yours —
 this is a starting point, not a drop-in fit for every spreadsheet layout.
 
+## Running the auto-updater from the Refresh button
+
+The **Refresh KPI Data** button can run your sheet's auto-updater Apps Script
+before it reloads the data, so you don't have to open the sheet and run the
+script yourself. (The 5-minute auto-refresh and the first page load don't run
+it. They only re-read the sheet.)
+
+It works by deploying the script as a **web app**: Google gives you a URL, and
+opening that URL runs the script.
+
+1. In the spreadsheet, open **Extensions → Apps Script** (the same project
+   that has your auto-updater function).
+2. Add this to the project. Change `UPDATE_FUNCTION_NAME` to the name of your
+   auto-updater function, exactly as it's written after `function`:
+
+   ```javascript
+   const UPDATE_FUNCTION_NAME = "updateKpis"; // ← your auto-updater's name
+   const UPDATE_COOLDOWN_SECONDS = 60;        // ignore repeat clicks within this window
+
+   function doGet() {
+     const lock = LockService.getScriptLock();
+     // If someone else's click is already running the update, wait for it to
+     // finish instead of starting a second copy.
+     if (!lock.tryLock(120000)) {
+       return jsonOut({ ok: true, skipped: "already running" });
+     }
+     try {
+       const cache = CacheService.getScriptCache();
+       if (cache.get("lastUpdate")) {
+         return jsonOut({ ok: true, skipped: "ran recently" });
+       }
+       this[UPDATE_FUNCTION_NAME]();
+       SpreadsheetApp.flush(); // make sure writes land before the dashboard re-reads
+       cache.put("lastUpdate", String(Date.now()), UPDATE_COOLDOWN_SECONDS);
+       return jsonOut({ ok: true, ranAt: new Date().toISOString() });
+     } catch (error) {
+       return jsonOut({ ok: false, error: String(error) });
+     } finally {
+       lock.releaseLock();
+     }
+   }
+
+   function jsonOut(obj) {
+     return ContentService.createTextOutput(JSON.stringify(obj))
+       .setMimeType(ContentService.MimeType.JSON);
+   }
+   ```
+
+3. Click **Deploy → New deployment**, click the gear next to "Select type",
+   and choose **Web app**. Set:
+   - **Execute as:** *Me* (the script runs with your access to the sheet)
+   - **Who has access:** *Anyone*. The dashboard calls the URL without
+     signing in, so any other setting gets blocked by a Google login page.
+4. Click **Deploy**, approve the permissions prompt, and copy the
+   **Web app URL**. It ends in `/exec`.
+5. Paste that URL into `SHEETS_UPDATE_URL` in `index.html`, then commit.
+
+Notes:
+
+- **Changing the script later:** saving the code doesn't update the web app.
+  Use **Deploy → Manage deployments → ✏️ Edit → Version: New version →
+  Deploy**. That keeps the same URL. Choosing *New deployment* again gives
+  you a new URL, which you'd then have to paste into `index.html` again.
+- **Who can trigger it:** anyone who has the URL can run the update. The
+  page code is public, so the URL is too. All they can do is run the same
+  update the button runs, and the cooldown means repeat clicks are ignored
+  for 60 seconds. Don't deploy a script this way if it does anything you
+  wouldn't want a stranger to trigger.
+- **If the script fails or takes longer than 2 minutes,** the dashboard
+  gives up on it and still reloads whatever is already in the sheet. The
+  error is shown in the browser console.
+- Your existing time-driven trigger keeps working. The button adds an
+  on-demand run alongside it.
+
 ## Where the URLs live in code
 
 The dashboard is a single app now (`index.html` + `app.js`) — Parts, Service,
@@ -304,7 +378,8 @@ Every feed constant lives together in the `CONFIG` block at the top of
 `CSV_PATH`, `AGING_CSV_PATH`, `OPEN_POS_CSV_PATH`, `AGED_RO_CSV_PATH`,
 `BACKORDERED_PARTS_CSV_PATH`, `UPTIME_ASSIST_CSV_PATH`,
 `UPCOMING_PRI_CSV_PATH`, `MISSED_OPPORTUNITIES_CSV_PATH`,
-`CLOSED_RO_WITH_PARTS_CSV_PATH`, `TREND_CSV_PATH`, `CLAIMS_CSV_PATH`
+`CLOSED_RO_WITH_PARTS_CSV_PATH`, `TREND_CSV_PATH`, `CLAIMS_CSV_PATH`, and
+`SHEETS_UPDATE_URL` (the Apps Script web app the Refresh button triggers)
 
 Until each constant is swapped to a published Google Sheets link, it keeps
 pointing at the existing GitHub CSV snapshot, so the dashboard keeps

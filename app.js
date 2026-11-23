@@ -881,7 +881,47 @@ document.querySelectorAll(".svc-advisor-select").forEach((select) => {
    });
 });
 
-async function refreshDailyData() {
+/**
+ * Asks the Google Sheets Apps Script web app (SHEETS_UPDATE_URL) to run the
+ * sheet's auto-updater and waits for it to finish, so the CSV reload that
+ * follows picks up fresh numbers. No-op when the URL isn't configured.
+ * Never throws — if the script fails, the dashboard still reloads the data
+ * that's already in the sheet.
+ */
+async function runSheetUpdate() {
+   if (typeof SHEETS_UPDATE_URL === "undefined" || !SHEETS_UPDATE_URL) return;
+
+   const label = document.getElementById("refreshBtnLabel");
+   const originalLabel = label ? label.textContent : "";
+   if (label) label.textContent = "Updating sheet…";
+
+   const controller = new AbortController();
+   const timeout = setTimeout(() => controller.abort(), 120000);
+   try {
+      // Plain GET with no custom headers so the browser doesn't send a CORS
+      // preflight, which Apps Script web apps don't answer.
+      const response = await fetch(withCacheBust(SHEETS_UPDATE_URL), {
+         cache: "no-store",
+         signal: controller.signal,
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.ok === false) {
+         console.warn("Sheet auto-update failed:", result.error || response.status);
+      }
+   } catch (error) {
+      console.warn("Sheet auto-update request failed:", error);
+   } finally {
+      clearTimeout(timeout);
+      if (label) label.textContent = originalLabel;
+   }
+}
+
+/**
+ * Reloads every daily feed. Pass { runSheetUpdate: true } (the Refresh KPI
+ * Data button does) to run the Google Sheets auto-updater first; the 5-minute
+ * auto-refresh and initial page load skip it and just re-read the sheet.
+ */
+async function refreshDailyData(options = {}) {
    const btn = document.getElementById("refreshBtn");
    if (btn) {
       btn.disabled = true;
@@ -889,6 +929,7 @@ async function refreshDailyData() {
    }
 
    try {
+      if (options.runSheetUpdate) await runSheetUpdate();
       await Promise.all([
          loadKpiCsv(),
          loadAgingCsv(),
